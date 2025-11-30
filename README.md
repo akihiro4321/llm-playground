@@ -11,9 +11,77 @@ LLM を使った簡易チャットアプリ（backend: Express + TypeScript / fr
 
 ## ディレクトリ構成
 
-- `backend/` : `/api/chat` を提供する Express サーバー
-- `frontend/`: React のチャット UI（Vite）
-- `backend/modelConfig.ts`: 使用する OpenAI モデル名を一元管理（デフォルト: `gpt-5-mini`）
+```
+llm-playground/
+├─ backend/            # API サーバー一式（Express, OpenAI 連携）
+│  ├─ config/          # 環境変数の読込・正規化
+│  ├─ routes/          # API ルート定義（/api/chat など）
+│  ├─ lib/             # 入力バリデーションなどの共通ロジック
+│  ├─ services/        # 外部サービス連携（OpenAI クライアント）
+│  ├─ middleware/      # 共通ミドルウェア（エラーハンドラ等）
+│  ├─ types/           # 型定義
+│  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
+│  └─ server.ts        # アプリ起動とルーティング設定
+├─ frontend/           # チャット UI（Vite + React）
+│  ├─ src/             # React コンポーネント・スタイル
+│  └─ vite.config.ts   # `/api` のバックエンドプロキシ設定
+└─ README.md           # 本ドキュメント
+```
+
+### Backend コード構成
+
+- `server.ts`: アプリのエントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立てを担当。
+- `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。起動時に一度だけ評価して再利用する。
+- `routes/chat.ts`: `/api/chat` のルーティング層。入力整形と OpenAI 呼び出しをそれぞれのモジュールへ委譲し、レスポンスを返す。
+- `lib/chatValidation.ts`: リクエストボディの検証・整形ロジック（role の許可チェックや空文字の排除、system プロンプトの補完）。
+- `services/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時のスタブ応答や、API エラーの HTTP 変換を担う。
+- `middleware/errorHandler.ts`: 共通エラーハンドラ。`HttpError` を HTTP ステータス付きで返し、それ以外を 500 にフォールバック。
+- `types/chat.ts`: チャットメッセージとリクエストボディの型定義。フロントと共有しやすい形で管理。
+- `modelConfig.ts`: デフォルトのモデル名とシステムプロンプトを一元管理。
+
+### Frontend コード構成
+
+- `src/App.tsx`: チャット UI の中核。入力フォーム、送信処理（/api/chat）、メッセージリスト表示、ローディング/エラー表示をまとめている。
+- `src/main.tsx`: React のエントリーポイント。`App` を root にマウント。
+- `src/styles.css`: 全体レイアウト・フォーム・メッセージリストなどのスタイル定義。
+- `vite.config.ts`: フロントの開発サーバーで `/api` をバックエンド (http://localhost:3001) へプロキシする設定。
+
+## アーキテクチャ構成（Mermaid）
+
+```mermaid
+flowchart LR
+  subgraph Frontend["Frontend (Vite + React)"]
+    UI["App.tsx<br/>チャット画面"]
+    Styles["styles.css<br/>UI スタイル"]
+    ConfigFE["vite.config.ts<br/>/api プロキシ"]
+  end
+
+  subgraph Backend["Backend (Express + TypeScript)"]
+    Server["server.ts<br/>アプリ起動・ルート登録"]
+    Routes["routes/chat.ts<br/>/api/chat ルート"]
+    Validation["lib/chatValidation.ts<br/>入力検証・整形"]
+    OpenAI["services/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
+    Env["config/env.ts<br/>環境変数読込"]
+    ErrorMW["middleware/errorHandler.ts<br/>エラーハンドラ"]
+    ModelCfg["modelConfig.ts<br/>モデル/システムプロンプト"]
+  end
+
+  User["ユーザー<br/>ブラウザ"]
+  OpenAISDK["OpenAI API"]
+
+  User --> UI
+  UI -- fetch /api/chat --> Server
+  ConfigFE -. dev proxy .- Server
+  Server --> Routes
+  Routes --> Validation
+  Routes --> OpenAI
+  Routes --> ErrorMW
+  Validation --> ModelCfg
+  OpenAI --> ModelCfg
+  Env --> Server
+  Routes --> Env
+  OpenAI --> OpenAISDK
+```
 
 ## 機能概要
 

@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## Communication
+
+- やり取りは日本語で行うこと。
+
 ## Project Structure
 
 - `backend/`: Express API in TypeScript (`server.ts`, `modelConfig.ts`), env vars in `backend/.env`.
