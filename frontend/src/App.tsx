@@ -39,6 +39,7 @@ function App() {
   const [error, setError] = useState("");
   const [presetId, setPresetId] = useState<PresetId>("polite");
   const [customSystemPrompt, setCustomSystemPrompt] = useState("");
+  const [useKnowledge, setUseKnowledge] = useState(false);
 
   const resolvedSystemPrompt = (): string => {
     if (customSystemPrompt.trim()) {
@@ -70,6 +71,7 @@ function App() {
         body: JSON.stringify({
           messages: nextMessages,
           systemPrompt: resolvedSystemPrompt(),
+          useKnowledge,
         }),
       });
 
@@ -110,10 +112,12 @@ function App() {
           presetOptions={PRESET_OPTIONS}
           presetId={presetId}
           customSystemPrompt={customSystemPrompt}
+          useKnowledge={useKnowledge}
           onSubmit={handleSubmit}
           onMessageChange={setMessage}
           onPresetChange={setPresetId}
           onCustomSystemPromptChange={setCustomSystemPrompt}
+          onUseKnowledgeChange={setUseKnowledge}
         />
       </div>
     </div>

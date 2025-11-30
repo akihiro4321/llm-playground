@@ -8,4 +8,5 @@ export type ChatMessage = {
 export type ChatRequestBody = {
   messages?: ChatMessage[];
   systemPrompt?: string;
+  useKnowledge?: boolean;
 };

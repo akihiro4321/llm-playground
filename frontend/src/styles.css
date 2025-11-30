@@ -121,6 +121,19 @@ body {
   color: #0f172a;
 }
 
+.knowledge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.knowledge-toggle input {
+  accent-color: #6366f1;
+}
+
 .preset-options {
   display: grid;
   gap: 8px;
@@ -161,6 +174,14 @@ body {
 .chat-form {
   display: grid;
   gap: 12px;
+}
+
+.input-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #475569;
 }
 
 .chat-log {

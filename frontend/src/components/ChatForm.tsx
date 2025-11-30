@@ -10,10 +10,12 @@ type ChatFormProps = {
   presetOptions: PresetOption[];
   presetId: PresetId;
   customSystemPrompt: string;
+  useKnowledge: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onMessageChange: (value: string) => void;
   onPresetChange: (preset: PresetId) => void;
   onCustomSystemPromptChange: (value: string) => void;
+  onUseKnowledgeChange: (value: boolean) => void;
 };
 
 function ChatForm({
@@ -23,10 +25,12 @@ function ChatForm({
   presetOptions,
   presetId,
   customSystemPrompt,
+  useKnowledge,
   onSubmit,
   onMessageChange,
   onPresetChange,
   onCustomSystemPromptChange,
+  onUseKnowledgeChange,
 }: ChatFormProps) {
   return (
     <form onSubmit={onSubmit} className="chat-form chat-input">
@@ -46,10 +50,17 @@ function ChatForm({
           onPresetChange={onPresetChange}
           customSystemPrompt={customSystemPrompt}
           onCustomSystemPromptChange={onCustomSystemPromptChange}
+          useKnowledge={useKnowledge}
+          onUseKnowledgeChange={onUseKnowledgeChange}
         />
       </details>
       <div className="chat-input__actions">
-        <span className="active-system-prompt">現在のシステム: {activeSystemPrompt}</span>
+        <div className="input-meta">
+          <span className="active-system-prompt">現在のシステム: {activeSystemPrompt}</span>
+          <span className="knowledge-status">
+            ドキュメント参照: {useKnowledge ? "ON" : "OFF"}
+          </span>
+        </div>
         <button type="submit" disabled={loading}>
           {loading ? "送信中…" : "送信"}
         </button>

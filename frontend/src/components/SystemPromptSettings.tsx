@@ -6,6 +6,8 @@ type SystemPromptSettingsProps = {
   onPresetChange: (preset: PresetId) => void;
   customSystemPrompt: string;
   onCustomSystemPromptChange: (value: string) => void;
+  useKnowledge: boolean;
+  onUseKnowledgeChange: (value: boolean) => void;
 };
 
 function SystemPromptSettings({
@@ -14,6 +16,8 @@ function SystemPromptSettings({
   onPresetChange,
   customSystemPrompt,
   onCustomSystemPromptChange,
+  useKnowledge,
+  onUseKnowledgeChange,
 }: SystemPromptSettingsProps) {
   return (
     <div className="system-prompt">
@@ -42,6 +46,14 @@ function SystemPromptSettings({
           rows={4}
         />
       </div>
+      <label className="knowledge-toggle">
+        <input
+          type="checkbox"
+          checked={useKnowledge}
+          onChange={(e) => onUseKnowledgeChange(e.target.checked)}
+        />
+        <span>ドキュメント(sample.txt)を参照して回答する</span>
+      </label>
     </div>
   );
 }

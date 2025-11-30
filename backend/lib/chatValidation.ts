@@ -4,6 +4,7 @@ import type { ChatMessage, ChatRequestBody } from "../types/chat.js";
 
 type NormalizedChatRequest = {
   chatMessages: ChatMessage[];
+  useKnowledge: boolean;
 };
 
 const isValidMessage = (message: ChatMessage): boolean => {
@@ -40,5 +41,8 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
         : DEFAULT_SYSTEM_PROMPT,
   };
 
-  return { chatMessages: [systemMessage, ...sanitizedMessages] };
+  return {
+    chatMessages: [systemMessage, ...sanitizedMessages],
+    useKnowledge: body.useKnowledge === true,
+  };
 };
