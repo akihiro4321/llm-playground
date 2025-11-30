@@ -14,7 +14,7 @@ backend/
 │  ├─ middleware/      # エラーハンドラ等
 │  ├─ infrastructure/  # OpenAI クライアント等の外部接続
 │  ├─ knowledge/       # 参照ドキュメントと設定（sample.txt）
-│  ├─ rag/             # チャンク分割・埋め込み・類似検索
+│  ├─ rag/             # チャンク分割・埋め込み・類似検索（Qdrant 連携は vectorIndexer/vectorStore/search）
 │  ├─ types/           # 型定義
 │  ├─ modelConfig.ts   # モデル名/プロンプト設定
 │  └─ server.ts        # アプリ起動・ルーティング
@@ -23,7 +23,7 @@ backend/
 
 ## Commands
 - セットアップ: `cd backend && npm install`
-- 開発: `npm run dev` (http://localhost:3001)
+- 開発: `npm run dev` (http://localhost:3001)。VS Code タスク `dev: all` で Qdrant（docker compose）起動を含めて同時起動可。
 - フォーマット: `npx prettier --write "**/*.{ts,js,json}"`
 - Lint: `npm run lint`
 - 型チェック: `npm run build -- --noEmit`

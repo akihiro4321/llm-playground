@@ -32,7 +32,7 @@ src/
 
 ## Commands
 - セットアップ: `cd frontend && npm install`
-- 開発: `npm run dev` (http://localhost:5173)
+- 開発: `npm run dev` (http://localhost:5173)。VS Code タスク `dev: all` で Qdrant → backend → frontend をまとめて起動可能。
 - フォーマット/Lint: `npm run lint`（eslint + simple-import-sort）
 - 型チェック: `npx tsc --noEmit`
 - ビルド: `npm run build`

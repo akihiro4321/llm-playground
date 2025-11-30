@@ -18,10 +18,11 @@ llm-playground/
 │  │  ├─ config/          # 環境変数の読込・正規化
 │  │  ├─ routes/          # API ルート定義（/api/chat など）
 │  │  ├─ lib/             # 入力バリデーションなどの共通ロジック
-│  │  ├─ services/        # 外部サービス連携（OpenAI クライアント）
+│  │  ├─ services/        # ドメインサービス（チャット処理）
 │  │  ├─ middleware/      # 共通ミドルウェア（エラーハンドラ等）
+│  │  ├─ infrastructure/  # 外部サービスクライアント（OpenAI など）
 │  │  ├─ knowledge/       # 参照ドキュメントと設定
-│  │  ├─ rag/             # チャンク分割・埋め込み・検索ロジック
+│  │  ├─ rag/             # チャンク分割・埋め込み・検索ロジック（Qdrant 連携）
 │  │  ├─ types/           # 型定義
 │  │  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
 │  │  └─ server.ts        # アプリ起動とルーティング設定
@@ -29,8 +30,8 @@ llm-playground/
 ├─ frontend/           # チャット UI（Vite + React, Feature-Sliced Design）
 │  ├─ src/
 │  │  ├─ app/              # エントリ/App構成・グローバルスタイル
-│  │  ├─ pages/chat-page/  # ページコンテナ（状態・送信処理）
-│  │  ├─ features/         # UI＋ロジック単位の機能（入力フォーム、プロンプト設定）
+│  │  ├─ pages/chat/       # ページコンテナ（薄いラッパー）
+│  │  ├─ features/         # UI＋ロジック単位の機能（チャット送信・プロンプト設定）
 │  │  ├─ widgets/          # ページを構成する大きめ部品（チャットログ、ヘッダー）
 │  │  ├─ entities/         # ドメイン型（メッセージ、プリセット）
 │  │  ├─ shared/api/       # `/api/chat` クライアント
@@ -43,12 +44,13 @@ llm-playground/
 ### Backend コード構成（backend/src 配下）
 
 - `server.ts`: エントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立て。
-- `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。
-- `routes/chat.ts`: `/api/chat` のルーティング。`useKnowledge` フラグを見て RAG 検索結果を組み込む。
-- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`indexer.ts`（Qdrant 初期投入）、`vectorStore.ts`（Qdrant クライアント）、`search.ts`（Qdrant 検索）、`types.ts`（型）。
+- `config/env.ts`: `PORT`、`OPENAI_API_KEY`、`QDRANT_URL` の読み込み・正規化。
+- `routes/chat.ts`: `/api/chat` のルーティング。バリデーション後にサービスへ委譲。
+- `services/chatService.ts`: チャット処理のサービス。`useKnowledge` を見て RAG 検索を組み込み、OpenAI 応答を生成。
+- `infrastructure/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時はスタブ応答。
+- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`vectorIndexer.ts`（Qdrant 初期投入）、`vectorStore.ts`（Qdrant クライアント）、`search.ts`（Qdrant 検索）、`types.ts`（型）。
 - `knowledge/`: 参照ドキュメント（`sample.txt`）と設定。ビルド時に `dist/knowledge` へコピーされる。
 - `lib/chatValidation.ts`: リクエストの検証・整形（role チェック、空文字の排除、system プロンプト補完）。
-- `services/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時はスタブ応答。
 - `middleware/errorHandler.ts`: 共通エラーハンドラ。`HttpError` はステータス付き、それ以外は 500 にフォールバック。
 - `types/chat.ts`: チャットメッセージとリクエストボディの型定義。
 - `modelConfig.ts`: デフォルトのモデル名とシステムプロンプト。
@@ -88,11 +90,12 @@ flowchart LR
     Server["src/server.ts<br/>アプリ起動・ルート登録"]
     Routes["src/routes/chat.ts<br/>/api/chat ルート"]
     Validation["src/lib/chatValidation.ts<br/>入力検証・整形"]
-    OpenAI["src/services/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
+    Service["src/services/chatService.ts<br/>チャット処理 + RAG"]
+    OpenAIInfra["src/infrastructure/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
     Env["src/config/env.ts<br/>環境変数読込"]
     ErrorMW["src/middleware/errorHandler.ts<br/>エラーハンドラ"]
     ModelCfg["src/modelConfig.ts<br/>モデル/システムプロンプト"]
-    RAG["src/rag/*<br/>チャンク化・埋め込み・検索"]
+    RAG["src/rag/*<br/>チャンク化・埋め込み・検索 (Qdrant)"]
     Knowledge["src/knowledge/sample.txt<br/>参照ドキュメント"]
   end
 
@@ -109,13 +112,15 @@ flowchart LR
   ConfigFE -. dev proxy .- Server
   Server --> Routes
   Routes --> Validation
-  Routes --> OpenAI
+  Routes --> Service
+  Service --> RAG
+  Service --> OpenAIInfra
   Routes --> ErrorMW
   Validation --> ModelCfg
-  OpenAI --> ModelCfg
+  Service --> ModelCfg
   Env --> Server
   Routes --> Env
-  OpenAI --> OpenAISDK
+  OpenAIInfra --> OpenAISDK
 ```
 
 ## 機能概要
@@ -131,7 +136,7 @@ flowchart LR
 
 - Node.js 18+ 推奨
 - OpenAI API キー（`backend/.env` に設定）
-- ローカル Qdrant（デフォルト `http://localhost:6333` で稼働）
+- ローカル Qdrant（デフォルト `http://localhost:6333` で稼働。`docker compose up -d` で起動可）
 
 ### セットアップ
 
@@ -146,6 +151,13 @@ npm run build # dist/server.js を生成（必要なら）
 cd ../frontend
 npm install
 npm run dev  # http://localhost:5173
+
+# Qdrant (ルートで必要に応じて)
+cd ..
+docker compose up -d
+
+# VS Code タスクでまとめて起動する場合
+# 「Tasks: Run Task」→「dev: all」で Qdrant → backend → frontend を順に起動
 ```
 
 バックエンドは `http://localhost:3001`、フロントエンドは `http://localhost:5173` で起動します。フロントエンドからの `/api` リクエストは Vite の proxy 設定でバックエンドに転送されます。

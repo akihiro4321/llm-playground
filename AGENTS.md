@@ -10,7 +10,7 @@
 
 ## Development / Validation
 - 依存インストール: `npm install` を各パッケージで実行。
-- 開発: `npm run dev`（backend:3001 / frontend:5173）。
+- 開発: `npm run dev`（backend:3001 / frontend:5173）。VS Code タスク `dev: all` で Qdrant（Docker Compose）→ backend → frontend を順に起動可能。
 - 検証: 各パッケージで `npm run lint` / `npx tsc --noEmit`（または backend: `npm run build -- --noEmit`）。
 - フォーマット: `prettier` + simple-import-sort（eslintのfixで整列）。
 
@@ -25,6 +25,7 @@
 
 ## Security / Secrets
 - `.env` を秘匿し、キーはコミットしない。新規環境変数はREADMEや各AGENTSに追記。
+- Qdrant の接続先は `QDRANT_URL` で指定（デフォルト `http://localhost:6333`）。Docker Compose で起動する場合は `docker compose up -d` を使用。
 
 ## Commits / PR
 - 短い命令形メッセージで1変更1コミットを基本とする。

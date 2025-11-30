@@ -60,8 +60,14 @@
       }
     },
     {
+      "label": "qdrant: up",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "problemMatcher": []
+    },
+    {
       "label": "dev: all",
-      "dependsOn": ["backend: dev", "frontend: dev"],
+      "dependsOn": ["qdrant: up", "backend: dev", "frontend: dev"],
       "runOptions": {
         "runOn": "default"
       },
