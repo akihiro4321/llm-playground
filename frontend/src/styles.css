@@ -118,6 +118,17 @@ body {
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status {
+  font-size: 13px;
+  color: #4338ca;
+  background: #eef2ff;
+  border-radius: 8px;
+  padding: 2px 8px;
 }
 
 .reply {
@@ -125,6 +136,8 @@ body {
   padding: 12px;
   white-space: pre-wrap;
   background: #fff;
+  display: grid;
+  gap: 10px;
 }
 
 .error {
@@ -132,6 +145,31 @@ body {
   color: #b91c1c;
   background: #fef2f2;
   border-top: 1px solid #fecdd3;
+}
+
+.msg {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.msg-role {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.msg-content {
+  color: #0f172a;
+  white-space: pre-wrap;
+}
+
+.msg-assistant {
+  background: #eef2ff;
+  border-color: #c7d2fe;
 }
 
 @media (max-width: 640px) {

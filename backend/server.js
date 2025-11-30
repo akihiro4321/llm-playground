@@ -17,10 +17,24 @@ const openaiClient = openaiApiKey
   : null;
 
 app.post("/api/chat", async (req, res) => {
-  const { message } = req.body || {};
-  if (!message || typeof message !== "string") {
-    return res.status(400).json({ error: "message is required" });
+  const { messages, systemPrompt } = req.body || {};
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "messages array is required" });
   }
+
+  const systemContent =
+    typeof systemPrompt === "string" && systemPrompt.trim()
+      ? systemPrompt
+      : "You are a helpful assistant.";
+
+  const chatMessages = [
+    { role: "system", content: systemContent },
+    ...messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    })),
+  ];
 
   // 環境変数が無い場合はスタブを返す
   if (!openaiClient) {
@@ -30,14 +44,13 @@ app.post("/api/chat", async (req, res) => {
   }
 
   try {
-    const completion = await openaiClient.responses.create({
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4.1-mini",
-      input: message,
+      messages: chatMessages,
     });
 
     const reply =
-      completion.output_text ||
-      completion.output[0]?.content[0]?.text ||
+      completion.choices?.[0]?.message?.content?.trim() ||
       "返答を生成できませんでした。";
     return res.json({ reply });
   } catch (error) {

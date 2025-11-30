@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: Launch server.js",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.js",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Frontend: Launch Chrome (Vite dev)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Fullstack: backend + frontend",
+      "configurations": ["Backend: Launch server.js", "Frontend: Launch Chrome (Vite dev)"],
+      "preLaunchTask": "dev: all"
+    }
+  ]
+}

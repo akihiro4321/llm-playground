@@ -1,29 +1,37 @@
 import { useState } from "react";
 
 const API_ENDPOINT = "/api/chat";
+const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 
 function App() {
   const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("");
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
-    setReply("");
 
     if (!message.trim()) {
       setError("メッセージを入力してください");
       return;
     }
 
+    const newUserMessage = { role: "user", content: message.trim() };
+    const nextMessages = [...messages, newUserMessage];
+    setMessages(nextMessages);
+    setMessage("");
     setLoading(true);
+
     try {
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          messages: nextMessages,
+          systemPrompt: DEFAULT_SYSTEM_PROMPT,
+        }),
       });
 
       if (!response.ok) {
@@ -31,7 +39,14 @@ function App() {
       }
 
       const data = await response.json();
-      setReply(data.reply || "(応答が空でした)");
+      const assistantReply =
+        data.reply ||
+        "（応答が空でした。モデル設定やネットワークを確認してください）";
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: assistantReply },
+      ]);
     } catch (err) {
       console.error(err);
       setError("送信に失敗しました。サーバーを確認してください。");
@@ -67,12 +82,25 @@ function App() {
         </form>
 
         <section className="response">
-          <div className="response-header">応答</div>
-          {error ? (
-            <div className="error">{error}</div>
-          ) : (
-            <pre className="reply">{reply || "まだ応答はありません"}</pre>
-          )}
+          <div className="response-header">
+            応答
+            {loading && <span className="status">Thinking...</span>}
+          </div>
+          {error && <div className="error">{error}</div>}
+          <div className="reply">
+            {messages.length === 0 ? (
+              <span>まだメッセージはありません</span>
+            ) : (
+              messages.map((msg, index) => (
+                <div key={index} className={`msg msg-${msg.role}`}>
+                  <span className="msg-role">
+                    {msg.role === "assistant" ? "Assistant" : "You"}
+                  </span>
+                  <span className="msg-content">{msg.content}</span>
+                </div>
+              ))
+            )}
+          </div>
         </section>
       </main>
     </div>
