@@ -1,9 +1,15 @@
 import type OpenAI from "openai";
 
-import type { EmbeddingVector } from "@/rag/types.js";
+import { EMBEDDING_MODEL } from "@/modelConfig";
+import type { EmbeddingVector } from "@/rag/types";
 
-const EMBEDDING_MODEL = "text-embedding-3-small";
-
+/**
+ * 文字列配列を指定のEmbeddingモデルでベクトル化します。
+ *
+ * @param openaiClient - OpenAIクライアント。未設定の場合は空配列を返します。
+ * @param texts - 埋め込み対象の文字列配列。
+ * @returns 入力順に対応した埋め込みベクトル配列。
+ */
 export const embedTexts = async (
   openaiClient: OpenAI | null,
   texts: string[],
@@ -17,5 +23,3 @@ export const embedTexts = async (
 
   return response.data.map((item) => item.embedding as EmbeddingVector);
 };
-
-export const getEmbeddingModel = (): string => EMBEDDING_MODEL;

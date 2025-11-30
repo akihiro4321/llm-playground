@@ -1,11 +1,18 @@
 import type OpenAI from "openai";
 
-import { embedTexts } from "@/rag/embeddings.js";
-import { loadChunks } from "@/rag/loader.js";
-import type { Chunk, EmbeddedChunk, EmbeddingVector } from "@/rag/types.js";
+import { embedTexts } from "@/rag/embeddings";
+import { loadChunks } from "@/rag/loader";
+import type { Chunk, EmbeddedChunk, EmbeddingVector } from "@/rag/types";
 
 let embeddedChunksCache: EmbeddedChunk[] | null = null;
 
+/**
+ * 2つの埋め込みベクトルのコサイン類似度を計算します。
+ *
+ * @param a - ベクトルA。
+ * @param b - ベクトルB。
+ * @returns 類似度スコア。長さ不一致やゼロベクトルの場合は0。
+ */
 const cosineSimilarity = (a: EmbeddingVector, b: EmbeddingVector): number => {
   if (a.length === 0 || b.length === 0 || a.length !== b.length) return 0;
 
@@ -23,6 +30,12 @@ const cosineSimilarity = (a: EmbeddingVector, b: EmbeddingVector): number => {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 };
 
+/**
+ * 知識チャンクを埋め込み済みで取得します（キャッシュ付き）。
+ *
+ * @param openaiClient - OpenAIクライアント。未設定の場合は空配列を返します。
+ * @returns 埋め込み済みチャンク配列。
+ */
 const ensureEmbeddedChunks = async (openaiClient: OpenAI | null): Promise<EmbeddedChunk[]> => {
   if (embeddedChunksCache) return embeddedChunksCache;
 
@@ -52,6 +65,14 @@ const ensureEmbeddedChunks = async (openaiClient: OpenAI | null): Promise<Embedd
   return embeddedChunksCache;
 };
 
+/**
+ * クエリを埋め込み化し、類似度上位のチャンクを返します。
+ *
+ * @param openaiClient - OpenAIクライアント。未設定の場合は空配列を返します。
+ * @param query - 類似検索するテキスト。
+ * @param topK - 返すチャンク件数（デフォルト4件）。
+ * @returns 類似度上位のチャンク配列。
+ */
 export const searchRelevantChunks = async (
   openaiClient: OpenAI | null,
   query: string,

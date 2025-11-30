@@ -10,6 +10,12 @@ export type AppEnv = {
   nodeEnv?: string;
 };
 
+/**
+ * PORT環境変数を数値に正規化します。
+ *
+ * @param value - PORTの文字列表現。
+ * @returns 有効なポート番号。無効な値や未設定の場合はデフォルトポート。
+ */
 const normalizePort = (value: string | undefined): number => {
   if (!value) {
     return DEFAULT_PORT;
@@ -23,6 +29,11 @@ const normalizePort = (value: string | undefined): number => {
   return parsed;
 };
 
+/**
+ * dotenvを考慮して環境変数を読み込み、アプリ内で使いやすい形に整形します。
+ *
+ * @returns アプリで利用する環境設定。
+ */
 export const loadEnv = (): AppEnv => {
   return {
     port: normalizePort(process.env.PORT),

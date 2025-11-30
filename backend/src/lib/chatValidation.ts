@@ -1,12 +1,18 @@
-import { BadRequestError } from "@/errors/httpError.js";
-import { DEFAULT_SYSTEM_PROMPT } from "@/modelConfig.js";
-import type { ChatMessage, ChatRequestBody } from "@/types/chat.js";
+import { BadRequestError } from "@/errors/httpError";
+import { DEFAULT_SYSTEM_PROMPT } from "@/modelConfig";
+import type { ChatMessage, ChatRequestBody } from "@/types/chat";
 
 type NormalizedChatRequest = {
   chatMessages: ChatMessage[];
   useKnowledge: boolean;
 };
 
+/**
+ * メッセージオブジェクトが有効かを検証します。
+ *
+ * @param message - 検証対象のメッセージ。
+ * @returns 有効な場合は`true`、それ以外は`false`。
+ */
 const isValidMessage = (message: ChatMessage): boolean => {
   return (
     message &&
@@ -17,6 +23,13 @@ const isValidMessage = (message: ChatMessage): boolean => {
   );
 };
 
+/**
+ * クライアントからのボディを正規化し、systemメッセージの付与と `useKnowledge` フラグを確定させます。
+ *
+ * @param body - リクエストボディ。
+ * @returns 正規化済みのメッセージ配列とフラグ。
+ * @throws BadRequestError メッセージ配列が不正な場合。
+ */
 export const normalizeChatRequest = (body: ChatRequestBody | undefined): NormalizedChatRequest => {
   if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
     throw new BadRequestError("messages array is required");

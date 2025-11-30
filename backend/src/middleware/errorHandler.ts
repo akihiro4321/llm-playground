@@ -1,7 +1,15 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { HttpError } from "@/errors/httpError.js";
+import { HttpError } from "@/errors/httpError";
 
+/**
+ * コントローラー内の例外を捕捉し、HTTPレスポンスに変換するエラーハンドラーです。
+ *
+ * @param err - ハンドリング対象のエラー。
+ * @param _req - Expressのリクエスト（未使用）。
+ * @param res - レスポンスオブジェクト。
+ * @param _next - 次のミドルウェア（未使用）。
+ */
 export const errorHandler = (
   err: unknown,
   _req: Request,

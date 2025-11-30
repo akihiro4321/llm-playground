@@ -34,14 +34,16 @@ llm-playground/
 
 ### Backend コード構成（backend/src 配下）
 
-- `server.ts`: アプリのエントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立てを担当。
-- `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。起動時に一度だけ評価して再利用する。
-- `routes/chat.ts`: `/api/chat` のルーティング層。入力整形と OpenAI 呼び出しをそれぞれのモジュールへ委譲し、レスポンスを返す。
-- `lib/chatValidation.ts`: リクエストボディの検証・整形ロジック（role の許可チェックや空文字の排除、system プロンプトの補完）。
-- `services/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時のスタブ応答や、API エラーの HTTP 変換を担う。
-- `middleware/errorHandler.ts`: 共通エラーハンドラ。`HttpError` を HTTP ステータス付きで返し、それ以外を 500 にフォールバック。
-- `types/chat.ts`: チャットメッセージとリクエストボディの型定義。フロントと共有しやすい形で管理。
-- `modelConfig.ts`: デフォルトのモデル名とシステムプロンプトを一元管理。
+- `server.ts`: エントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立て。
+- `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。
+- `routes/chat.ts`: `/api/chat` のルーティング。`useKnowledge` フラグを見て RAG 検索結果を組み込む。
+- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`search.ts`（コサイン類似度で上位チャンク取得）、`types.ts`（型）。
+- `knowledge/`: 参照ドキュメント（`sample.txt`）と設定。ビルド時に `dist/knowledge` へコピーされる。
+- `lib/chatValidation.ts`: リクエストの検証・整形（role チェック、空文字の排除、system プロンプト補完）。
+- `services/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時はスタブ応答。
+- `middleware/errorHandler.ts`: 共通エラーハンドラ。`HttpError` はステータス付き、それ以外は 500 にフォールバック。
+- `types/chat.ts`: チャットメッセージとリクエストボディの型定義。
+- `modelConfig.ts`: デフォルトのモデル名とシステムプロンプト。
 
 ### Frontend コード構成
 
@@ -61,13 +63,15 @@ flowchart LR
   end
 
   subgraph Backend["Backend (Express + TypeScript)"]
-    Server["server.ts<br/>アプリ起動・ルート登録"]
-    Routes["routes/chat.ts<br/>/api/chat ルート"]
-    Validation["lib/chatValidation.ts<br/>入力検証・整形"]
-    OpenAI["services/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
-    Env["config/env.ts<br/>環境変数読込"]
-    ErrorMW["middleware/errorHandler.ts<br/>エラーハンドラ"]
-    ModelCfg["modelConfig.ts<br/>モデル/システムプロンプト"]
+    Server["src/server.ts<br/>アプリ起動・ルート登録"]
+    Routes["src/routes/chat.ts<br/>/api/chat ルート"]
+    Validation["src/lib/chatValidation.ts<br/>入力検証・整形"]
+    OpenAI["src/services/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
+    Env["src/config/env.ts<br/>環境変数読込"]
+    ErrorMW["src/middleware/errorHandler.ts<br/>エラーハンドラ"]
+    ModelCfg["src/modelConfig.ts<br/>モデル/システムプロンプト"]
+    RAG["src/rag/*<br/>チャンク化・埋め込み・検索"]
+    Knowledge["src/knowledge/sample.txt<br/>参照ドキュメント"]
   end
 
   User["ユーザー<br/>ブラウザ"]

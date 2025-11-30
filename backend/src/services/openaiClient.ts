@@ -1,12 +1,27 @@
 import OpenAI from "openai";
 
-import { HttpError } from "@/errors/httpError.js";
-import type { ChatMessage } from "@/types/chat.js";
+import { HttpError } from "@/errors/httpError";
+import type { ChatMessage } from "@/types/chat";
 
+/**
+ * OpenAIクライアントをAPIキーから初期化します。
+ *
+ * @param apiKey - OpenAIのAPIキー。未設定の場合は`null`を返します。
+ * @returns 初期化済みのクライアントまたは`null`。
+ */
 export const createOpenAiClient = (apiKey?: string): OpenAI | null => {
   return apiKey ? new OpenAI({ apiKey }) : null;
 };
 
+/**
+ * チャットメッセージ配列をOpenAIに送り、アシスタントの応答を生成します。
+ *
+ * @param openaiClient - OpenAIクライアント。未設定ならスタブ応答を返します。
+ * @param messages - 送信するメッセージ配列。
+ * @param modelName - 使用するモデル名。
+ * @returns 生成された応答文字列。
+ * @throws HttpError OpenAI API呼び出しに失敗した場合。
+ */
 export const generateChatReply = async (
   openaiClient: OpenAI | null,
   messages: ChatMessage[],
