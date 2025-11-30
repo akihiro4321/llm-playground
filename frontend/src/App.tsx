@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 type ChatRole = "system" | "user" | "assistant";
 type ChatMessage = {
@@ -12,14 +12,12 @@ const PRESET_OPTIONS: { id: PresetId; label: string; prompt: string }[] = [
   {
     id: "polite",
     label: "丁寧な日本語アシスタント",
-    prompt:
-      "あなたは丁寧な日本語アシスタントです。わかりやすく、簡潔に説明してください。",
+    prompt: "あなたは丁寧な日本語アシスタントです。わかりやすく、簡潔に説明してください。",
   },
   {
     id: "casual",
     label: "カジュアルな友達",
-    prompt:
-      "あなたはカジュアルな友達です。フランクな口調で、親しみやすく答えてください。",
+    prompt: "あなたはカジュアルな友達です。フランクな口調で、親しみやすく答えてください。",
   },
   {
     id: "english-coach",
@@ -53,7 +51,7 @@ function App() {
     return preset?.prompt || DEFAULT_SYSTEM_PROMPT;
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -93,13 +91,9 @@ function App() {
       }
 
       const assistantReply =
-        data.reply ||
-        "（応答が空でした。モデル設定やネットワークを確認してください）";
+        data.reply || "（応答が空でした。モデル設定やネットワークを確認してください）";
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: assistantReply },
-      ]);
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantReply }]);
     } catch (err) {
       console.error(err);
       setError("送信に失敗しました。サーバーを確認してください。");
@@ -109,62 +103,18 @@ function App() {
   };
 
   return (
-    <div className="page">
-      <header className="hero">
-        <div className="pill">Mini LLM Chat</div>
-        <h1>
-          シンプルに試す
-          <span>LLM Playground</span>
-        </h1>
-        <p>バックエンドの /api/chat に投げて結果を見るだけの最小UIです。</p>
-      </header>
+    <div className="layout">
+      <div className="chat-area">
+        <header className="hero">
+          <div className="pill">Mini LLM Chat</div>
+          <h1>
+            シンプルに試す
+            <span>LLM Playground</span>
+          </h1>
+          <p>バックエンドの /api/chat に投げて結果を見るだけの最小UIです。</p>
+        </header>
 
-      <main className="card">
-        <section className="system-prompt">
-          <div className="system-prompt__header">システムプロンプト</div>
-          <div className="preset-options">
-            {PRESET_OPTIONS.map((preset) => (
-              <label key={preset.id} className="preset-option">
-                <input
-                  type="radio"
-                  name="preset"
-                  value={preset.id}
-                  checked={presetId === preset.id}
-                  onChange={() => setPresetId(preset.id)}
-                />
-                <span className="preset-label">{preset.label}</span>
-              </label>
-            ))}
-          </div>
-          <div className="custom-prompt">
-            <label htmlFor="customPrompt">
-              カスタムプロンプト（入力がある場合はこちらを優先）
-            </label>
-            <textarea
-              id="customPrompt"
-              value={customSystemPrompt}
-              onChange={(e) => setCustomSystemPrompt(e.target.value)}
-              placeholder="例: あなたは関西弁で話すアシスタントです。"
-              rows={3}
-            />
-          </div>
-        </section>
-
-        <form onSubmit={handleSubmit} className="chat-form">
-          <label htmlFor="message">メッセージ</label>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="聞きたいことを入力"
-            rows={4}
-          />
-          <button type="submit" disabled={loading}>
-            {loading ? "送信中…" : "送信"}
-          </button>
-        </form>
-
-        <section className="response">
+        <section className="response chat-log">
           <div className="response-header">
             応答
             {loading && <span className="status">Thinking...</span>}
@@ -176,16 +126,63 @@ function App() {
             ) : (
               messages.map((msg, index) => (
                 <div key={`${msg.role}-${index}`} className={`msg msg-${msg.role}`}>
-                  <span className="msg-role">
-                    {msg.role === "assistant" ? "Assistant" : "You"}
-                  </span>
+                  <span className="msg-role">{msg.role === "assistant" ? "Assistant" : "You"}</span>
                   <span className="msg-content">{msg.content}</span>
                 </div>
               ))
             )}
           </div>
         </section>
-      </main>
+
+        <form onSubmit={handleSubmit} className="chat-form chat-input">
+          <label htmlFor="message">メッセージ</label>
+          <textarea
+            id="message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="聞きたいことを入力"
+            rows={3}
+          />
+          <details className="system-prompt-toggle">
+            <summary>システムプロンプトを設定</summary>
+            <div className="system-prompt">
+              <div className="system-prompt__header">プリセット</div>
+              <div className="preset-options">
+                {PRESET_OPTIONS.map((preset) => (
+                  <label key={preset.id} className="preset-option">
+                    <input
+                      type="radio"
+                      name="preset"
+                      value={preset.id}
+                      checked={presetId === preset.id}
+                      onChange={() => setPresetId(preset.id)}
+                    />
+                    <span className="preset-label">{preset.label}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="custom-prompt">
+                <label htmlFor="customPrompt">
+                  カスタムプロンプト（入力がある場合はこちらを優先）
+                </label>
+                <textarea
+                  id="customPrompt"
+                  value={customSystemPrompt}
+                  onChange={(e) => setCustomSystemPrompt(e.target.value)}
+                  placeholder="例: あなたは関西弁で話すアシスタントです。"
+                  rows={4}
+                />
+              </div>
+            </div>
+          </details>
+          <div className="chat-input__actions">
+            <span className="active-system-prompt">現在のシステム: {resolvedSystemPrompt()}</span>
+            <button type="submit" disabled={loading}>
+              {loading ? "送信中…" : "送信"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

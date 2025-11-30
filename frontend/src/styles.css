@@ -1,7 +1,12 @@
 :root {
   color: #0f172a;
   background: radial-gradient(circle at 20% 20%, #eef2ff 0, #f8fafc 35%, #ffffff 80%);
-  font-family: "Inter", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Inter",
+    "Noto Sans JP",
+    system-ui,
+    -apple-system,
+    sans-serif;
   line-height: 1.6;
 }
 
@@ -13,12 +18,22 @@ body {
   margin: 0;
   min-height: 100vh;
   color: #0f172a;
+  overflow: hidden;
 }
 
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px 64px;
+.layout {
+  display: flex;
+  height: 100vh;
+  background: #f8fafc;
+}
+
+.hero {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+  padding: 4px 0 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .hero .pill {
@@ -49,23 +64,56 @@ body {
   color: #475569;
 }
 
-.card {
-  margin-top: 32px;
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+  gap: 16px;
   background: #ffffff;
-  border-radius: 16px;
+  border-right: 1px solid #e2e8f0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.settings-panel {
+  width: 340px;
   padding: 24px;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
-  display: grid;
-  gap: 20px;
+  border-left: 1px solid #e2e8f0;
+  background: #f8fafc;
+  overflow-y: auto;
+}
+
+.system-prompt-toggle {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.system-prompt-toggle summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #0f172a;
+  list-style: none;
+}
+
+.system-prompt-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+.system-prompt-toggle[open] {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .system-prompt {
-  border: 1px solid #e2e8f0;
+  border: none;
   border-radius: 12px;
-  padding: 16px;
-  background: #f8fafc;
+  padding: 12px 0 0;
+  background: #ffffff;
   display: grid;
   gap: 12px;
+  box-shadow: none;
 }
 
 .system-prompt__header {
@@ -99,7 +147,7 @@ body {
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
-  background: #ffffff;
+  background: #f8fafc;
   font-size: 14px;
   font-family: inherit;
   resize: vertical;
@@ -113,6 +161,18 @@ body {
 .chat-form {
   display: grid;
   gap: 12px;
+}
+
+.chat-log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow-y: auto;
+  box-shadow: inset 0 1px 0 rgba(226, 232, 240, 0.6);
 }
 
 .chat-form label {
@@ -145,7 +205,9 @@ body {
   color: #ffffff;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .chat-form button:disabled {
@@ -159,9 +221,8 @@ body {
 }
 
 .response {
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .response-header {
@@ -172,6 +233,9 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .status {
@@ -187,7 +251,8 @@ body {
   padding: 12px;
   white-space: pre-wrap;
   background: #fff;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -199,12 +264,15 @@ body {
 }
 
 .msg {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  max-width: 70%;
+  width: fit-content;
 }
 
 .msg-role {
@@ -219,16 +287,54 @@ body {
 }
 
 .msg-assistant {
+  margin-right: auto;
   background: #eef2ff;
   border-color: #c7d2fe;
 }
 
+.msg-user {
+  margin-left: auto;
+  background: linear-gradient(120deg, #6366f1, #4338ca);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.msg-user .msg-role,
+.msg-user .msg-content {
+  color: #ffffff;
+}
+
+.chat-input {
+  position: sticky;
+  bottom: 0;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.08);
+}
+
+.chat-input__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.active-system-prompt {
+  font-size: 13px;
+  color: #475569;
+}
+
 @media (max-width: 640px) {
-  .page {
-    padding: 32px 16px;
+  .layout {
+    flex-direction: column;
   }
 
-  .hero h1 {
-    font-size: 32px;
+  .settings-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
   }
 }
