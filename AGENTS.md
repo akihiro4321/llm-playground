@@ -7,7 +7,7 @@
 ## Project Structure
 
 - `backend/`: Express API in TypeScript (`server.ts`, `modelConfig.ts`), env vars in `backend/.env`.
-- `frontend/`: Vite + React + TypeScript (`src/App.tsx`, `src/main.tsx`, `styles.css`), `vite.config.ts` proxies `/api`.
+- `frontend/`: Vite + React + TypeScript（Feature-Sliced Design: `src/app`, `pages/chat-page`, `features`, `widgets`, `entities`, `shared`、スタイルは `src/app/styles/index.css`）、`vite.config.ts` proxies `/api`.
 - `.vscode/`: launch/tasks/settings for dev servers and auto-format/lint on save.
 - `.prettierrc`, eslint configs per package; `.gitignore` tracks only VS Code config needed for tasks.
 

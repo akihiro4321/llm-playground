@@ -1,4 +1,4 @@
-import type { PresetId, PresetOption } from "@/types/chat";
+import type { PresetId, PresetOption } from "@/entities/message";
 
 type SystemPromptSettingsProps = {
   presetOptions: PresetOption[];

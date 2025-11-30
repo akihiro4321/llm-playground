@@ -6,7 +6,7 @@ LLM を使った簡易チャットアプリ（backend: Express + TypeScript / fr
 
 - バックエンド: Node.js / Express / OpenAI SDK / TypeScript
 - フロントエンド: Vite / React 18 / TypeScript
-- スタイル: シンプルな CSS（`frontend/src/styles.css`）
+- スタイル: シンプルな CSS（`frontend/src/app/styles/index.css`）
 - 開発ポート: API `http://localhost:3001`、UI `http://localhost:5173`
 
 ## ディレクトリ構成
@@ -26,8 +26,16 @@ llm-playground/
 │  │  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
 │  │  └─ server.ts        # アプリ起動とルーティング設定
 │  └─ dist/             # ビルド成果物（tsc / tsc-alias 実行後）
-├─ frontend/           # チャット UI（Vite + React）
-│  ├─ src/             # React コンポーネント・スタイル
+├─ frontend/           # チャット UI（Vite + React, Feature-Sliced Design）
+│  ├─ src/
+│  │  ├─ app/              # エントリ/App構成・グローバルスタイル
+│  │  ├─ pages/chat-page/  # ページコンテナ（状態・送信処理）
+│  │  ├─ features/         # UI＋ロジック単位の機能（入力フォーム、プロンプト設定）
+│  │  ├─ widgets/          # ページを構成する大きめ部品（チャットログ、ヘッダー）
+│  │  ├─ entities/         # ドメイン型（メッセージ、プリセット）
+│  │  ├─ shared/api/       # `/api/chat` クライアント
+│  │  ├─ shared/config/    # プロンプトプリセットなどの設定
+│  │  └─ app/styles/       # グローバルスタイル
 │  └─ vite.config.ts   # `/api` のバックエンドプロキシ設定
 └─ README.md           # 本ドキュメント
 ```
@@ -45,11 +53,18 @@ llm-playground/
 - `types/chat.ts`: チャットメッセージとリクエストボディの型定義。
 - `modelConfig.ts`: デフォルトのモデル名とシステムプロンプト。
 
-### Frontend コード構成
+### Frontend コード構成（Feature-Sliced Design）
 
-- `src/App.tsx`: チャット UI の中核。入力フォーム、送信処理（/api/chat）、メッセージリスト表示、ローディング/エラー表示をまとめている。
-- `src/main.tsx`: React のエントリーポイント。`App` を root にマウント。
-- `src/styles.css`: 全体レイアウト・フォーム・メッセージリストなどのスタイル定義。
+- `src/app/index.tsx`: アプリのエントリ。グローバルスタイル読み込みとページマウント。
+- `src/pages/chat-page/`: ページコンテナ。チャット状態管理と送信ハンドラを保持。
+- `src/features/chat-input/ui/ChatForm.tsx`: 入力フォームと送信ボタン。システム設定スロット付き。
+- `src/features/system-prompt/ui/SystemPromptSettings.tsx`: プリセット選択、カスタムプロンプト、RAGトグル。
+- `src/widgets/chat-log/ui/ChatLog.tsx`: メッセージ履歴表示。
+- `src/widgets/header/ui/Header.tsx`: ヒーローヘッダー。
+- `src/entities/message/`: メッセージ/ロール/プリセットIDの型定義。
+- `src/shared/api/chat.ts`: `/api/chat` クライアント。
+- `src/shared/config/chatConfig.ts`: プロンプトプリセット、デフォルトプロンプト、エンドポイント。
+- `src/app/styles/index.css`: 全体レイアウト・フォーム・メッセージリストなどのスタイル。
 - `vite.config.ts`: フロントの開発サーバーで `/api` をバックエンド (http://localhost:3001) へプロキシする設定。
 
 ## アーキテクチャ構成（Mermaid）
@@ -57,8 +72,13 @@ llm-playground/
 ```mermaid
 flowchart LR
   subgraph Frontend["Frontend (Vite + React)"]
-    UI["App.tsx<br/>チャット画面"]
-    Styles["styles.css<br/>UI スタイル"]
+    AppEntry["app/index.tsx<br/>エントリ"]
+    ChatPage["pages/chat-page<br/>状態・送信ロジック"]
+    Widgets["widgets/*<br/>チャットログ/ヘッダー"]
+    Features["features/*<br/>入力/プロンプト設定"]
+    SharedApi["shared/api/chat.ts<br/>/api/chat クライアント"]
+    SharedCfg["shared/config/chatConfig.ts<br/>プリセット設定"]
+    Styles["app/styles/index.css<br/>UI スタイル"]
     ConfigFE["vite.config.ts<br/>/api プロキシ"]
   end
 
@@ -77,8 +97,13 @@ flowchart LR
   User["ユーザー<br/>ブラウザ"]
   OpenAISDK["OpenAI API"]
 
-  User --> UI
-  UI -- fetch /api/chat --> Server
+  User --> AppEntry
+  AppEntry --> ChatPage
+  ChatPage --> Features
+  Features --> SharedApi
+  ChatPage --> Widgets
+  AppEntry --> Styles
+  ChatPage -- fetch /api/chat --> Server
   ConfigFE -. dev proxy .- Server
   Server --> Routes
   Routes --> Validation

@@ -1,36 +1,23 @@
-import { type FormEvent } from "react";
-
-import SystemPromptSettings from "@/components/SystemPromptSettings";
-import type { PresetId, PresetOption } from "@/types/chat";
+import { type FormEvent, type ReactNode } from "react";
 
 type ChatFormProps = {
   message: string;
   loading: boolean;
   activeSystemPrompt: string;
-  presetOptions: PresetOption[];
-  presetId: PresetId;
-  customSystemPrompt: string;
   useKnowledge: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onMessageChange: (value: string) => void;
-  onPresetChange: (preset: PresetId) => void;
-  onCustomSystemPromptChange: (value: string) => void;
-  onUseKnowledgeChange: (value: boolean) => void;
+  children?: ReactNode;
 };
 
 function ChatForm({
   message,
   loading,
   activeSystemPrompt,
-  presetOptions,
-  presetId,
-  customSystemPrompt,
   useKnowledge,
   onSubmit,
   onMessageChange,
-  onPresetChange,
-  onCustomSystemPromptChange,
-  onUseKnowledgeChange,
+  children,
 }: ChatFormProps) {
   return (
     <form onSubmit={onSubmit} className="chat-form chat-input">
@@ -42,18 +29,12 @@ function ChatForm({
         placeholder="聞きたいことを入力"
         rows={3}
       />
-      <details className="system-prompt-toggle">
-        <summary>システムプロンプトを設定</summary>
-        <SystemPromptSettings
-          presetOptions={presetOptions}
-          presetId={presetId}
-          onPresetChange={onPresetChange}
-          customSystemPrompt={customSystemPrompt}
-          onCustomSystemPromptChange={onCustomSystemPromptChange}
-          useKnowledge={useKnowledge}
-          onUseKnowledgeChange={onUseKnowledgeChange}
-        />
-      </details>
+      {children ? (
+        <details className="system-prompt-toggle">
+          <summary>システムプロンプトを設定</summary>
+          {children}
+        </details>
+      ) : null}
       <div className="chat-input__actions">
         <div className="input-meta">
           <span className="active-system-prompt">現在のシステム: {activeSystemPrompt}</span>

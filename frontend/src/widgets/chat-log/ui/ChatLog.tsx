@@ -1,4 +1,4 @@
-import { type ChatMessage, type ChatRole,ChatRoles } from "../types/chat";
+import { type ChatMessage, type ChatRole,ChatRoles } from "@/entities/message";
 
 const ROLE_LABEL: Record<ChatRole, string> = {
   [ChatRoles.Assistant]: "Assistant",
