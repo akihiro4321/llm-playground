@@ -2,10 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Backend: Launch server.js",
+      "name": "Backend: Launch (tsx dev)",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/server.js",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--"],
       "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env",
       "console": "integratedTerminal",
@@ -23,7 +24,7 @@
   "compounds": [
     {
       "name": "Fullstack: backend + frontend",
-      "configurations": ["Backend: Launch server.js", "Frontend: Launch Chrome (Vite dev)"],
+      "configurations": ["Backend: Launch (tsx dev)", "Frontend: Launch Chrome (Vite dev)"],
       "preLaunchTask": "dev: all"
     }
   ]

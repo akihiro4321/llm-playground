@@ -1,10 +1,10 @@
 # llm-playground
 
-LLM を使った簡易チャットアプリ（backend: Express / frontend: Vite + React）。
+LLM を使った簡易チャットアプリ（backend: Express + TypeScript / frontend: Vite + React + TypeScript）。
 
 ## 技術スタック
-- バックエンド: Node.js / Express / OpenAI SDK
-- フロントエンド: Vite / React 18
+- バックエンド: Node.js / Express / OpenAI SDK / TypeScript
+- フロントエンド: Vite / React 18 / TypeScript
 - スタイル: シンプルな CSS（`frontend/src/styles.css`）
 - 開発ポート: API `http://localhost:3001`、UI `http://localhost:5173`
 
@@ -14,7 +14,7 @@ LLM を使った簡易チャットアプリ（backend: Express / frontend: Vite 
 - `frontend/`: React のチャット UI（Vite）
 
 ## 機能概要
-- `POST /api/chat`: `{ message: string }` を受け取り、OpenAI (`gpt-4.1-mini`) で生成した応答を返す
+- `POST /api/chat`: `{ messages: ChatMessage[], systemPrompt?: string }` を受け取り、OpenAI (`gpt-4.1-mini`) で応答を返す
   - API キー未設定時はスタブで固定メッセージを返す
 - `GET /health`: ヘルスチェック
 - フロントエンド: 単一ページで入力 → `/api/chat` に送信 → 応答表示
@@ -31,6 +31,7 @@ LLM を使った簡易チャットアプリ（backend: Express / frontend: Vite 
 cd backend
 npm install
 npm run dev
+npm run build # dist/server.js を生成（必要なら）
 
 # frontend
 cd ../frontend
