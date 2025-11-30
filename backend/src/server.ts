@@ -2,9 +2,9 @@ import cors from "cors";
 import express from "express";
 
 import { loadEnv } from "@/config/env";
+import { createOpenAiClient } from "@/infrastructure/openaiClient";
 import { errorHandler } from "@/middleware/errorHandler";
 import { buildChatRouter } from "@/routes/chat";
-import { createOpenAiClient } from "@/services/openaiClient";
 
 const app = express();
 const env = loadEnv();

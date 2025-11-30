@@ -10,14 +10,15 @@ backend/
 │  ├─ config/          # 環境変数の読込・正規化
 │  ├─ routes/          # API ルート（/api/chat）
 │  ├─ lib/             # 入力バリデーションなど共通ロジック
-│  ├─ services/        # OpenAI クライアント生成・呼び出し
+│  ├─ services/        # ドメインサービス（チャット処理など）
 │  ├─ middleware/      # エラーハンドラ等
+│  ├─ infrastructure/  # OpenAI クライアント等の外部接続
 │  ├─ knowledge/       # 参照ドキュメントと設定（sample.txt）
 │  ├─ rag/             # チャンク分割・埋め込み・類似検索
 │  ├─ types/           # 型定義
 │  ├─ modelConfig.ts   # モデル名/プロンプト設定
 │  └─ server.ts        # アプリ起動・ルーティング
-└─ .env                # OPENAI_API_KEY など（秘匿）
+└─ .env                # OPENAI_API_KEY / QDRANT_URL など（秘匿）
 ```
 
 ## Commands
@@ -26,6 +27,7 @@ backend/
 - フォーマット: `npx prettier --write "**/*.{ts,js,json}"`
 - Lint: `npm run lint`
 - 型チェック: `npm run build -- --noEmit`
+- Qdrant接続: `QDRANT_URL` が未設定の場合は `http://localhost:6333` を使用
 
 ## Coding Style
 - TypeScript/ESM, async/await, 狭い型を優先

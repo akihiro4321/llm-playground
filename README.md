@@ -45,7 +45,7 @@ llm-playground/
 - `server.ts`: エントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立て。
 - `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。
 - `routes/chat.ts`: `/api/chat` のルーティング。`useKnowledge` フラグを見て RAG 検索結果を組み込む。
-- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`search.ts`（コサイン類似度で上位チャンク取得）、`types.ts`（型）。
+- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`indexer.ts`（Qdrant 初期投入）、`vectorStore.ts`（Qdrant クライアント）、`search.ts`（Qdrant 検索）、`types.ts`（型）。
 - `knowledge/`: 参照ドキュメント（`sample.txt`）と設定。ビルド時に `dist/knowledge` へコピーされる。
 - `lib/chatValidation.ts`: リクエストの検証・整形（role チェック、空文字の排除、system プロンプト補完）。
 - `services/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時はスタブ応答。
@@ -131,6 +131,7 @@ flowchart LR
 
 - Node.js 18+ 推奨
 - OpenAI API キー（`backend/.env` に設定）
+- ローカル Qdrant（デフォルト `http://localhost:6333` で稼働）
 
 ### セットアップ
 
@@ -154,6 +155,7 @@ npm run dev  # http://localhost:5173
 - `backend/.env`
   - `OPENAI_API_KEY`: 必須。未設定時はスタブ応答。
   - `PORT`: 任意。指定しない場合は 3001。
+  - `QDRANT_URL`: 任意。Qdrant エンドポイント（デフォルト `http://localhost:6333`）。
 
 ### 備考
 
