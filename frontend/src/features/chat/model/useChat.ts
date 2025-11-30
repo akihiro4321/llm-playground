@@ -1,14 +1,26 @@
 import { type FormEvent, useState } from "react";
 
 import { type ChatMessage, ChatRoles, type PresetId } from "@/entities/message";
-import ChatForm from "@/features/chat-input/ui/ChatForm";
-import SystemPromptSettings from "@/features/system-prompt/ui/SystemPromptSettings";
 import { sendChat } from "@/shared/api/chat";
 import { DEFAULT_SYSTEM_PROMPT, PRESET_OPTIONS } from "@/shared/config/chatConfig";
-import ChatLog from "@/widgets/chat-log/ui/ChatLog";
-import Header from "@/widgets/header/ui/Header";
 
-function ChatPage() {
+export type UseChatReturn = {
+  message: string;
+  messages: ChatMessage[];
+  loading: boolean;
+  error: string;
+  presetId: PresetId;
+  customSystemPrompt: string;
+  useKnowledge: boolean;
+  activeSystemPrompt: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
+  onMessageChange: (value: string) => void;
+  onPresetChange: (preset: PresetId) => void;
+  onCustomSystemPromptChange: (value: string) => void;
+  onUseKnowledgeChange: (value: boolean) => void;
+};
+
+export const useChat = (): UseChatReturn => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -64,34 +76,19 @@ function ChatPage() {
     }
   };
 
-  return (
-    <div className="layout">
-      <div className="chat-area">
-        <Header />
-
-        <ChatLog messages={messages} loading={loading} error={error} />
-
-        <ChatForm
-          message={message}
-          loading={loading}
-          activeSystemPrompt={resolvedSystemPrompt()}
-          useKnowledge={useKnowledge}
-          onSubmit={handleSubmit}
-          onMessageChange={setMessage}
-        >
-          <SystemPromptSettings
-            presetOptions={PRESET_OPTIONS}
-            presetId={presetId}
-            onPresetChange={setPresetId}
-            customSystemPrompt={customSystemPrompt}
-            onCustomSystemPromptChange={setCustomSystemPrompt}
-            useKnowledge={useKnowledge}
-            onUseKnowledgeChange={setUseKnowledge}
-          />
-        </ChatForm>
-      </div>
-    </div>
-  );
-}
-
-export default ChatPage;
+  return {
+    message,
+    messages,
+    loading,
+    error,
+    presetId,
+    customSystemPrompt,
+    useKnowledge,
+    activeSystemPrompt: resolvedSystemPrompt(),
+    onSubmit: handleSubmit,
+    onMessageChange: setMessage,
+    onPresetChange: setPresetId,
+    onCustomSystemPromptChange: setCustomSystemPrompt,
+    onUseKnowledgeChange: setUseKnowledge,
+  };
+};

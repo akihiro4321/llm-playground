@@ -56,9 +56,11 @@ llm-playground/
 ### Frontend コード構成（Feature-Sliced Design）
 
 - `src/app/index.tsx`: アプリのエントリ。グローバルスタイル読み込みとページマウント。
-- `src/pages/chat-page/`: ページコンテナ。チャット状態管理と送信ハンドラを保持。
-- `src/features/chat-input/ui/ChatForm.tsx`: 入力フォームと送信ボタン。システム設定スロット付き。
-- `src/features/system-prompt/ui/SystemPromptSettings.tsx`: プリセット選択、カスタムプロンプト、RAGトグル。
+- `src/pages/chat/ui/ChatPage.tsx`: ページコンテナ。チャットウィジェットを配置する薄いページ。
+- `src/widgets/chat-window/ui/ChatWindow.tsx`: チャット画面全体のUIを構成（ヘッダー、ログ、入力、設定）。
+- `src/features/chat/model/useChat.ts`: チャット状態管理・送信処理のロジック。
+- `src/features/chat/ui/ChatForm.tsx`: 入力フォームと送信ボタン。システム設定スロット付き。
+- `src/features/chat/ui/SystemPromptSettings.tsx`: プリセット選択、カスタムプロンプト、RAGトグル。
 - `src/widgets/chat-log/ui/ChatLog.tsx`: メッセージ履歴表示。
 - `src/widgets/header/ui/Header.tsx`: ヒーローヘッダー。
 - `src/entities/message/`: メッセージ/ロール/プリセットIDの型定義。
@@ -73,9 +75,9 @@ llm-playground/
 flowchart LR
   subgraph Frontend["Frontend (Vite + React)"]
     AppEntry["app/index.tsx<br/>エントリ"]
-    ChatPage["pages/chat-page<br/>状態・送信ロジック"]
-    Widgets["widgets/*<br/>チャットログ/ヘッダー"]
-    Features["features/*<br/>入力/プロンプト設定"]
+    ChatPage["pages/chat/ui/ChatPage<br/>ページコンテナ"]
+    Widgets["widgets/*<br/>チャットウィンドウ/ログ/ヘッダー"]
+    Features["features/*<br/>入力/プロンプト設定/ロジック"]
     SharedApi["shared/api/chat.ts<br/>/api/chat クライアント"]
     SharedCfg["shared/config/chatConfig.ts<br/>プリセット設定"]
     Styles["app/styles/index.css<br/>UI スタイル"]
