@@ -107,11 +107,7 @@ function App() {
       <div className="chat-area">
         <header className="hero">
           <div className="pill">Mini LLM Chat</div>
-          <h1>
-            シンプルに試す
-            <span>LLM Playground</span>
-          </h1>
-          <p>バックエンドの /api/chat に投げて結果を見るだけの最小UIです。</p>
+          <h1>LLM Playground</h1>
         </header>
 
         <section className="response chat-log">
