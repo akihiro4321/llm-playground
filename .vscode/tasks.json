@@ -1,0 +1,74 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "backend: dev",
+      "type": "npm",
+      "script": "dev",
+      "path": "backend",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "Server listening on"
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "frontend: dev",
+      "type": "npm",
+      "script": "dev",
+      "path": "frontend",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "ready in"
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "dev: all",
+      "dependsOn": ["backend: dev", "frontend: dev"],
+      "runOptions": {
+        "runOn": "default"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
