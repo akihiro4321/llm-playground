@@ -1,14 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 
-type ChatRole = "system" | "user" | "assistant";
-type ChatMessage = {
-  role: ChatRole;
-  content: string;
-};
+import ChatForm from "./components/ChatForm";
+import ChatLog from "./components/ChatLog";
+import Header from "./components/Header";
+import { type ChatMessage, ChatRoles, type PresetId, type PresetOption } from "./types/chat";
 
-type PresetId = "polite" | "casual" | "english-coach";
-
-const PRESET_OPTIONS: { id: PresetId; label: string; prompt: string }[] = [
+const PRESET_OPTIONS: PresetOption[] = [
   {
     id: "polite",
     label: "丁寧な日本語アシスタント",
@@ -60,10 +57,7 @@ function App() {
       return;
     }
 
-    const newUserMessage: ChatMessage = {
-      role: "user",
-      content: message.trim(),
-    };
+    const newUserMessage: ChatMessage = { role: ChatRoles.User, content: message.trim() };
     const nextMessages = [...messages, newUserMessage];
     setMessages(nextMessages);
     setMessage("");
@@ -93,7 +87,7 @@ function App() {
       const assistantReply =
         data.reply || "（応答が空でした。モデル設定やネットワークを確認してください）";
 
-      setMessages((prev) => [...prev, { role: "assistant", content: assistantReply }]);
+      setMessages((prev) => [...prev, { role: ChatRoles.Assistant, content: assistantReply }]);
     } catch (err) {
       console.error(err);
       setError("送信に失敗しました。サーバーを確認してください。");
@@ -105,79 +99,22 @@ function App() {
   return (
     <div className="layout">
       <div className="chat-area">
-        <header className="hero">
-          <div className="pill">Mini LLM Chat</div>
-          <h1>LLM Playground</h1>
-        </header>
+        <Header />
 
-        <section className="response chat-log">
-          <div className="response-header">
-            応答
-            {loading && <span className="status">Thinking...</span>}
-          </div>
-          {error && <div className="error">{error}</div>}
-          <div className="reply">
-            {messages.length === 0 ? (
-              <span>まだメッセージはありません</span>
-            ) : (
-              messages.map((msg, index) => (
-                <div key={`${msg.role}-${index}`} className={`msg msg-${msg.role}`}>
-                  <span className="msg-role">{msg.role === "assistant" ? "Assistant" : "You"}</span>
-                  <span className="msg-content">{msg.content}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        <ChatLog messages={messages} loading={loading} error={error} />
 
-        <form onSubmit={handleSubmit} className="chat-form chat-input">
-          <label htmlFor="message">メッセージ</label>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="聞きたいことを入力"
-            rows={3}
-          />
-          <details className="system-prompt-toggle">
-            <summary>システムプロンプトを設定</summary>
-            <div className="system-prompt">
-              <div className="system-prompt__header">プリセット</div>
-              <div className="preset-options">
-                {PRESET_OPTIONS.map((preset) => (
-                  <label key={preset.id} className="preset-option">
-                    <input
-                      type="radio"
-                      name="preset"
-                      value={preset.id}
-                      checked={presetId === preset.id}
-                      onChange={() => setPresetId(preset.id)}
-                    />
-                    <span className="preset-label">{preset.label}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="custom-prompt">
-                <label htmlFor="customPrompt">
-                  カスタムプロンプト（入力がある場合はこちらを優先）
-                </label>
-                <textarea
-                  id="customPrompt"
-                  value={customSystemPrompt}
-                  onChange={(e) => setCustomSystemPrompt(e.target.value)}
-                  placeholder="例: あなたは関西弁で話すアシスタントです。"
-                  rows={4}
-                />
-              </div>
-            </div>
-          </details>
-          <div className="chat-input__actions">
-            <span className="active-system-prompt">現在のシステム: {resolvedSystemPrompt()}</span>
-            <button type="submit" disabled={loading}>
-              {loading ? "送信中…" : "送信"}
-            </button>
-          </div>
-        </form>
+        <ChatForm
+          message={message}
+          loading={loading}
+          activeSystemPrompt={resolvedSystemPrompt()}
+          presetOptions={PRESET_OPTIONS}
+          presetId={presetId}
+          customSystemPrompt={customSystemPrompt}
+          onSubmit={handleSubmit}
+          onMessageChange={setMessage}
+          onPresetChange={setPresetId}
+          onCustomSystemPromptChange={setCustomSystemPrompt}
+        />
       </div>
     </div>
   );

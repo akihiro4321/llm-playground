@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import OpenAI from "openai";
+
 import { DEFAULT_SYSTEM_PROMPT, MODEL_NAME } from "./modelConfig.js";
 
 dotenv.config();
