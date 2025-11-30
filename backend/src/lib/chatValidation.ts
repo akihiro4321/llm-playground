@@ -1,6 +1,6 @@
-import { BadRequestError } from "../errors/httpError.js";
-import { DEFAULT_SYSTEM_PROMPT } from "../modelConfig.js";
-import type { ChatMessage, ChatRequestBody } from "../types/chat.js";
+import { BadRequestError } from "@/errors/httpError.js";
+import { DEFAULT_SYSTEM_PROMPT } from "@/modelConfig.js";
+import type { ChatMessage, ChatRequestBody } from "@/types/chat.js";
 
 type NormalizedChatRequest = {
   chatMessages: ChatMessage[];

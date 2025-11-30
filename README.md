@@ -14,21 +14,25 @@ LLM を使った簡易チャットアプリ（backend: Express + TypeScript / fr
 ```
 llm-playground/
 ├─ backend/            # API サーバー一式（Express, OpenAI 連携）
-│  ├─ config/          # 環境変数の読込・正規化
-│  ├─ routes/          # API ルート定義（/api/chat など）
-│  ├─ lib/             # 入力バリデーションなどの共通ロジック
-│  ├─ services/        # 外部サービス連携（OpenAI クライアント）
-│  ├─ middleware/      # 共通ミドルウェア（エラーハンドラ等）
-│  ├─ types/           # 型定義
-│  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
-│  └─ server.ts        # アプリ起動とルーティング設定
+│  ├─ src/
+│  │  ├─ config/          # 環境変数の読込・正規化
+│  │  ├─ routes/          # API ルート定義（/api/chat など）
+│  │  ├─ lib/             # 入力バリデーションなどの共通ロジック
+│  │  ├─ services/        # 外部サービス連携（OpenAI クライアント）
+│  │  ├─ middleware/      # 共通ミドルウェア（エラーハンドラ等）
+│  │  ├─ knowledge/       # 参照ドキュメントと設定
+│  │  ├─ rag/             # チャンク分割・埋め込み・検索ロジック
+│  │  ├─ types/           # 型定義
+│  │  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
+│  │  └─ server.ts        # アプリ起動とルーティング設定
+│  └─ dist/             # ビルド成果物（tsc / tsc-alias 実行後）
 ├─ frontend/           # チャット UI（Vite + React）
 │  ├─ src/             # React コンポーネント・スタイル
 │  └─ vite.config.ts   # `/api` のバックエンドプロキシ設定
 └─ README.md           # 本ドキュメント
 ```
 
-### Backend コード構成
+### Backend コード構成（backend/src 配下）
 
 - `server.ts`: アプリのエントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立てを担当。
 - `config/env.ts`: `PORT` と `OPENAI_API_KEY` の読み込み・正規化。起動時に一度だけ評価して再利用する。

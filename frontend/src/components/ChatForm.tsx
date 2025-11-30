@@ -1,7 +1,7 @@
 import { type FormEvent } from "react";
 
-import type { PresetId, PresetOption } from "../types/chat";
-import SystemPromptSettings from "./SystemPromptSettings";
+import SystemPromptSettings from "@/components/SystemPromptSettings";
+import type { PresetId, PresetOption } from "@/types/chat";
 
 type ChatFormProps = {
   message: string;

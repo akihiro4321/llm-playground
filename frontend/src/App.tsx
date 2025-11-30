@@ -1,9 +1,9 @@
 import { type FormEvent, useState } from "react";
 
-import ChatForm from "./components/ChatForm";
-import ChatLog from "./components/ChatLog";
-import Header from "./components/Header";
-import { type ChatMessage, ChatRoles, type PresetId, type PresetOption } from "./types/chat";
+import ChatForm from "@/components/ChatForm";
+import ChatLog from "@/components/ChatLog";
+import Header from "@/components/Header";
+import { type ChatMessage, ChatRoles, type PresetId, type PresetOption } from "@/types/chat";
 
 const PRESET_OPTIONS: PresetOption[] = [
   {

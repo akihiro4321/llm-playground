@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 
-import { KNOWLEDGE_FILE_PATH } from "./knowledgeConfig.js";
+import { KNOWLEDGE_FILE_PATH } from "@/knowledge/knowledgeConfig.js";
 
 export const loadKnowledgeText = async (): Promise<string | null> => {
   try {

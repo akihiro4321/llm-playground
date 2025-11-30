@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-import { HttpError } from "../errors/httpError.js";
-import type { ChatMessage } from "../types/chat.js";
+import { HttpError } from "@/errors/httpError.js";
+import type { ChatMessage } from "@/types/chat.js";
 
 export const createOpenAiClient = (apiKey?: string): OpenAI | null => {
   return apiKey ? new OpenAI({ apiKey }) : null;
