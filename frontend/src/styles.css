@@ -59,6 +59,57 @@ body {
   gap: 20px;
 }
 
+.system-prompt {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fafc;
+  display: grid;
+  gap: 12px;
+}
+
+.system-prompt__header {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.preset-options {
+  display: grid;
+  gap: 8px;
+}
+
+.preset-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.preset-option input {
+  accent-color: #6366f1;
+}
+
+.preset-label {
+  font-weight: 600;
+}
+
+.custom-prompt textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.custom-prompt textarea:focus {
+  outline: 2px solid #c7d2fe;
+  border-color: #a5b4fc;
+}
+
 .chat-form {
   display: grid;
   gap: 12px;

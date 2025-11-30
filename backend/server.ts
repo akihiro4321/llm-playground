@@ -2,7 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import OpenAI from "openai";
-import { MODEL_NAME } from "./modelConfig.js";
+import { DEFAULT_SYSTEM_PROMPT, MODEL_NAME } from "./modelConfig.js";
 
 dotenv.config();
 
@@ -20,8 +20,6 @@ type ChatRequestBody = {
   messages?: ChatMessage[];
   systemPrompt?: string;
 };
-
-const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 
 app.use(cors());
 app.use(express.json());

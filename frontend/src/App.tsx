@@ -6,6 +6,29 @@ type ChatMessage = {
   content: string;
 };
 
+type PresetId = "polite" | "casual" | "english-coach";
+
+const PRESET_OPTIONS: { id: PresetId; label: string; prompt: string }[] = [
+  {
+    id: "polite",
+    label: "丁寧な日本語アシスタント",
+    prompt:
+      "あなたは丁寧な日本語アシスタントです。わかりやすく、簡潔に説明してください。",
+  },
+  {
+    id: "casual",
+    label: "カジュアルな友達",
+    prompt:
+      "あなたはカジュアルな友達です。フランクな口調で、親しみやすく答えてください。",
+  },
+  {
+    id: "english-coach",
+    label: "英語学習コーチ",
+    prompt:
+      "あなたは英語学習のコーチです。英語と日本語を交えて、学習者が理解しやすいようにアドバイスしてください。",
+  },
+];
+
 const API_ENDPOINT = "/api/chat";
 const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 
@@ -19,6 +42,16 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [presetId, setPresetId] = useState<PresetId>("polite");
+  const [customSystemPrompt, setCustomSystemPrompt] = useState("");
+
+  const resolvedSystemPrompt = (): string => {
+    if (customSystemPrompt.trim()) {
+      return customSystemPrompt.trim();
+    }
+    const preset = PRESET_OPTIONS.find((p) => p.id === presetId);
+    return preset?.prompt || DEFAULT_SYSTEM_PROMPT;
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,7 +77,7 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: nextMessages,
-          systemPrompt: DEFAULT_SYSTEM_PROMPT,
+          systemPrompt: resolvedSystemPrompt(),
         }),
       });
 
@@ -87,6 +120,36 @@ function App() {
       </header>
 
       <main className="card">
+        <section className="system-prompt">
+          <div className="system-prompt__header">システムプロンプト</div>
+          <div className="preset-options">
+            {PRESET_OPTIONS.map((preset) => (
+              <label key={preset.id} className="preset-option">
+                <input
+                  type="radio"
+                  name="preset"
+                  value={preset.id}
+                  checked={presetId === preset.id}
+                  onChange={() => setPresetId(preset.id)}
+                />
+                <span className="preset-label">{preset.label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="custom-prompt">
+            <label htmlFor="customPrompt">
+              カスタムプロンプト（入力がある場合はこちらを優先）
+            </label>
+            <textarea
+              id="customPrompt"
+              value={customSystemPrompt}
+              onChange={(e) => setCustomSystemPrompt(e.target.value)}
+              placeholder="例: あなたは関西弁で話すアシスタントです。"
+              rows={3}
+            />
+          </div>
+        </section>
+
         <form onSubmit={handleSubmit} className="chat-form">
           <label htmlFor="message">メッセージ</label>
           <textarea
