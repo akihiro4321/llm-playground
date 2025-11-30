@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express, { Request, Response } from "express";
 import OpenAI from "openai";
+import { MODEL_NAME } from "./modelConfig.js";
 
 dotenv.config();
 
@@ -79,7 +80,7 @@ app.post(
 
     try {
       const completion = await openaiClient.chat.completions.create({
-        model: "gpt-4.1-mini",
+        model: MODEL_NAME,
         messages: chatMessages,
       });
 

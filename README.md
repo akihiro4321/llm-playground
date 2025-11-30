@@ -12,9 +12,10 @@ LLM を使った簡易チャットアプリ（backend: Express + TypeScript / fr
 
 - `backend/` : `/api/chat` を提供する Express サーバー
 - `frontend/`: React のチャット UI（Vite）
+- `backend/modelConfig.ts`: 使用する OpenAI モデル名を一元管理（デフォルト: `gpt-5-mini`）
 
 ## 機能概要
-- `POST /api/chat`: `{ messages: ChatMessage[], systemPrompt?: string }` を受け取り、OpenAI (`gpt-4.1-mini`) で応答を返す
+- `POST /api/chat`: `{ messages: ChatMessage[], systemPrompt?: string }` を受け取り、OpenAI (`gpt-5-mini`) で応答を返す
   - API キー未設定時はスタブで固定メッセージを返す
 - `GET /health`: ヘルスチェック
 - フロントエンド: 単一ページで入力 → `/api/chat` に送信 → 応答表示
