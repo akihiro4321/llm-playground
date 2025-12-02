@@ -5,6 +5,7 @@ import type { ChatMessage, ChatRequestBody } from "@/types/chat";
 type NormalizedChatRequest = {
   chatMessages: ChatMessage[];
   useKnowledge: boolean;
+  docIds: string[];
 };
 
 /**
@@ -57,5 +58,15 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
   return {
     chatMessages: [systemMessage, ...sanitizedMessages],
     useKnowledge: body.useKnowledge === true,
+    docIds:
+      Array.isArray(body.docIds) && body.docIds.length > 0
+        ? Array.from(
+            new Set(
+              body.docIds
+                .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+                .map((id) => id.trim()),
+            ),
+          )
+        : [],
   };
 };

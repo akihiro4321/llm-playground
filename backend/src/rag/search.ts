@@ -5,6 +5,11 @@ import type { Chunk } from "@/rag/types";
 import { ensureQdrantIndexed } from "@/rag/vectorIndexer";
 import { QDRANT_COLLECTION, qdrantClient } from "@/rag/vectorStore";
 
+type SearchOptions = {
+  topK?: number;
+  docIds?: string[];
+};
+
 /**
  * クエリを埋め込み化し、Qdrantで類似チャンクを検索して返します。
  *
@@ -16,8 +21,9 @@ import { QDRANT_COLLECTION, qdrantClient } from "@/rag/vectorStore";
 export const searchRelevantChunks = async (
   openaiClient: OpenAI | null,
   query: string,
-  topK = 4,
+  options: SearchOptions = {},
 ): Promise<Chunk[]> => {
+  const { topK = 4, docIds } = options;
   if (!query.trim()) return [];
 
   if (!openaiClient) return [];
@@ -33,16 +39,27 @@ export const searchRelevantChunks = async (
       vector: queryEmbedding,
       limit: topK,
       with_payload: true,
+      filter:
+        docIds && docIds.length > 0
+          ? {
+              must: [
+                {
+                  key: "doc_id",
+                  match: { any: docIds },
+                },
+              ],
+            }
+          : undefined,
     });
 
     return results
       .map<Chunk>((point, index) => ({
-        id:
-          typeof point.payload?.chunk_id === "number"
-            ? point.payload.chunk_id
-            : typeof point.id === "number"
-              ? point.id
-              : index,
+        id: typeof point.id === "string" ? point.id : `result-${index}`,
+        docId:
+          typeof point.payload?.doc_id === "string" ? point.payload.doc_id : "unknown-doc",
+        title: typeof point.payload?.title === "string" ? point.payload.title : "",
+        chunkIndex:
+          typeof point.payload?.chunk_index === "number" ? point.payload.chunk_index : index,
         text: typeof point.payload?.text === "string" ? point.payload.text : "",
       }))
       .filter((chunk) => chunk.text.trim().length > 0);

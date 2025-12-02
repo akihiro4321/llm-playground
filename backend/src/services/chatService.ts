@@ -17,13 +17,16 @@ export const handleChat = async (
   openaiClient: OpenAI | null,
   body: ChatRequestBody | undefined,
 ): Promise<string> => {
-  const { chatMessages, useKnowledge } = normalizeChatRequest(body);
+  const { chatMessages, useKnowledge, docIds } = normalizeChatRequest(body);
   const [systemMessage, ...historyMessages] = chatMessages;
 
   const lastUserMessage = [...historyMessages].reverse().find((message) => message.role === "user");
   const relevantChunks =
     useKnowledge && lastUserMessage
-      ? await searchRelevantChunks(openaiClient, lastUserMessage.content, 4)
+      ? await searchRelevantChunks(openaiClient, lastUserMessage.content, {
+          topK: 4,
+          docIds,
+        })
       : [];
 
   const knowledgeMessage: ChatMessage | null =
@@ -31,7 +34,10 @@ export const handleChat = async (
       ? {
           role: "system",
           content: `以下の資料断片を前提に、ユーザーの質問に答えてください。必要に応じて資料内容を引用して構いません。\n\n${relevantChunks
-            .map((chunk, index) => `[#${index + 1}] ${chunk.text}`)
+            .map(
+              (chunk, index) =>
+                `[#${index + 1} ${chunk.title || chunk.docId} #${chunk.chunkIndex}] ${chunk.text}`,
+            )
             .join("\n\n")}`,
         }
       : null;

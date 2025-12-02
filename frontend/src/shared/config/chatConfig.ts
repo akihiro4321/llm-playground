@@ -1,6 +1,7 @@
 import type { PresetOption } from "@/entities/message";
 
 export const API_ENDPOINT = "/api/chat";
+export const KNOWLEDGE_DOCS_ENDPOINT = "/api/knowledge/docs";
 
 export const DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant.";
 

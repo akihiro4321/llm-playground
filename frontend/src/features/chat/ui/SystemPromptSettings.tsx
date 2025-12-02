@@ -1,5 +1,7 @@
 import type { PresetId, PresetOption } from "@/entities/message";
 
+import type { KnowledgeDocSummary } from "@/shared/api/knowledge";
+
 type SystemPromptSettingsProps = {
   presetOptions: PresetOption[];
   presetId: PresetId;
@@ -8,6 +10,9 @@ type SystemPromptSettingsProps = {
   onCustomSystemPromptChange: (value: string) => void;
   useKnowledge: boolean;
   onUseKnowledgeChange: (value: boolean) => void;
+  availableDocs: KnowledgeDocSummary[];
+  selectedDocIds: string[];
+  onDocToggle: (docId: string) => void;
 };
 
 function SystemPromptSettings({
@@ -18,6 +23,9 @@ function SystemPromptSettings({
   onCustomSystemPromptChange,
   useKnowledge,
   onUseKnowledgeChange,
+  availableDocs,
+  selectedDocIds,
+  onDocToggle,
 }: SystemPromptSettingsProps) {
   return (
     <div className="system-prompt">
@@ -52,8 +60,31 @@ function SystemPromptSettings({
           checked={useKnowledge}
           onChange={(e) => onUseKnowledgeChange(e.target.checked)}
         />
-        <span>ドキュメント(sample.txt)を参照して回答する</span>
+        <span>ドキュメントを参照して回答する</span>
       </label>
+      <div className="doc-selector">
+        <div className="system-prompt__header">対象ドキュメント</div>
+        <p className="doc-selector__hint">未選択の場合は全ドキュメントを検索します。</p>
+        <div className="doc-options">
+          {availableDocs.length === 0 ? (
+            <span className="doc-option doc-option--empty">
+              利用可能なドキュメントが見つかりませんでした
+            </span>
+          ) : (
+            availableDocs.map((doc) => (
+              <label key={doc.id} className="doc-option">
+                <input
+                  type="checkbox"
+                  checked={selectedDocIds.includes(doc.id)}
+                  onChange={() => onDocToggle(doc.id)}
+                  disabled={!useKnowledge}
+                />
+                <span>{doc.title}</span>
+              </label>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

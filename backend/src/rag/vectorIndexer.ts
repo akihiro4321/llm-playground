@@ -1,11 +1,13 @@
+import crypto from "crypto";
 import type OpenAI from "openai";
 
 import { embedTexts } from "@/rag/embeddings";
-import { loadChunks } from "@/rag/loader";
+import { loadDocumentChunks } from "@/rag/loader";
 import { QDRANT_COLLECTION, QDRANT_VECTOR_SIZE, qdrantClient } from "@/rag/vectorStore";
 
 let initPromise: Promise<boolean> | null = null;
 
+// コレクションが存在しなければ作成する。
 const ensureCollection = async (): Promise<void> => {
   try {
     await qdrantClient.getCollection(QDRANT_COLLECTION);
@@ -19,9 +21,14 @@ const ensureCollection = async (): Promise<void> => {
   }
 };
 
-const hasIndexedPoints = async (): Promise<boolean> => {
-  const { count } = await qdrantClient.count(QDRANT_COLLECTION, { exact: true });
-  return (count ?? 0) > 0;
+// 追加されたチャンクがある場合は再インデックスが必要。
+const needsReindex = async (expectedCount: number): Promise<boolean> => {
+  try {
+    const { count } = await qdrantClient.count(QDRANT_COLLECTION, { exact: true });
+    return count < expectedCount;
+  } catch {
+    return true;
+  }
 };
 
 /**
@@ -33,45 +40,49 @@ const hasIndexedPoints = async (): Promise<boolean> => {
 export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<boolean> => {
   if (!openaiClient) return false;
 
-  if (!initPromise) {
-    initPromise = (async () => {
-      try {
-        await ensureCollection();
-        if (await hasIndexedPoints()) return true;
+  if (initPromise) return initPromise;
 
-        const chunks = await loadChunks();
-        if (chunks.length === 0) return false;
+  initPromise = (async () => {
+    try {
+      await ensureCollection();
 
-        const embeddings = await embedTexts(
-          openaiClient,
-          chunks.map((chunk) => chunk.text),
-        );
+      // 全ドキュメントをロードして、必要な場合だけEmbedding→Upsertする。
+      const chunks = await loadDocumentChunks();
+      if (chunks.length === 0) return false;
 
-        const points = chunks
-          .map((chunk, index) => ({
-            id: chunk.id,
-            vector: embeddings[index] ?? [],
-            payload: {
-              text: chunk.text,
-              chunk_id: chunk.id,
-            },
-          }))
-          .filter((point) => Array.isArray(point.vector) && point.vector.length > 0);
+      const shouldIndex = await needsReindex(chunks.length);
+      if (!shouldIndex) return true;
 
-        if (points.length === 0) return false;
+      const embeddings = await embedTexts(
+        openaiClient,
+        chunks.map((chunk) => chunk.text),
+      );
 
-        await qdrantClient.upsert(QDRANT_COLLECTION, { points });
-        return true;
-      } catch (error) {
-        console.error("Failed to initialize Qdrant index:", error);
-        return false;
-      }
-    })();
-  }
+      const points = chunks
+        .map((chunk, index) => ({
+          id: crypto.randomUUID(),
+          vector: embeddings[index] ?? [],
+          payload: {
+            doc_id: chunk.docId,
+            title: chunk.title,
+            text: chunk.text,
+            chunk_index: chunk.chunkIndex,
+          },
+        }))
+        .filter((point) => Array.isArray(point.vector) && point.vector.length > 0);
+
+      if (points.length === 0) return false;
+
+      // Qdrantへまとめて投入し、初期化完了とする。
+      await qdrantClient.upsert(QDRANT_COLLECTION, { points });
+      return true;
+    } catch (error) {
+      console.error("Failed to initialize Qdrant index:", error);
+      return false;
+    }
+  })();
 
   const result = await initPromise;
-  if (!result) {
-    initPromise = null;
-  }
+  initPromise = null;
   return result;
 };

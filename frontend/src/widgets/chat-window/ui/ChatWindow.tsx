@@ -12,12 +12,15 @@ function ChatWindow() {
     presetId,
     customSystemPrompt,
     useKnowledge,
+    availableDocs,
+    selectedDocIds,
     activeSystemPrompt,
     onSubmit,
     onMessageChange,
     onPresetChange,
     onCustomSystemPromptChange,
     onUseKnowledgeChange,
+    onDocToggle,
   } = useChat();
 
   return (
@@ -30,6 +33,7 @@ function ChatWindow() {
           loading={loading}
           activeSystemPrompt={activeSystemPrompt}
           useKnowledge={useKnowledge}
+          selectedDocIds={selectedDocIds}
           onSubmit={onSubmit}
           onMessageChange={onMessageChange}
         >
@@ -41,6 +45,9 @@ function ChatWindow() {
             onCustomSystemPromptChange={onCustomSystemPromptChange}
             useKnowledge={useKnowledge}
             onUseKnowledgeChange={onUseKnowledgeChange}
+            availableDocs={availableDocs}
+            selectedDocIds={selectedDocIds}
+            onDocToggle={onDocToggle}
           />
         </ChatForm>
       </div>

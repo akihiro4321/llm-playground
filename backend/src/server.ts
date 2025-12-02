@@ -5,6 +5,7 @@ import { loadEnv } from "@/config/env";
 import { createOpenAiClient } from "@/infrastructure/openaiClient";
 import { errorHandler } from "@/middleware/errorHandler";
 import { buildChatRouter } from "@/routes/chat";
+import { buildKnowledgeRouter } from "@/routes/knowledge";
 
 const app = express();
 const env = loadEnv();
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api", buildChatRouter(openaiClient));
+app.use("/api", buildKnowledgeRouter());
 
 /**
  * ヘルスチェック用の軽量エンドポイントです。

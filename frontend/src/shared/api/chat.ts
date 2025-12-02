@@ -10,6 +10,7 @@ export type ChatRequestPayload = {
   messages: ChatMessage[];
   systemPrompt: string;
   useKnowledge: boolean;
+  docIds: string[];
 };
 
 export const sendChat = async (payload: ChatRequestPayload): Promise<ChatResponse> => {

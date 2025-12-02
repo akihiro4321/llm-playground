@@ -1,7 +1,8 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { type ChatMessage, ChatRoles, type PresetId } from "@/entities/message";
 import { sendChat } from "@/shared/api/chat";
+import { fetchKnowledgeDocs, type KnowledgeDocSummary } from "@/shared/api/knowledge";
 import { DEFAULT_SYSTEM_PROMPT, PRESET_OPTIONS } from "@/shared/config/chatConfig";
 
 export type UseChatReturn = {
@@ -12,12 +13,15 @@ export type UseChatReturn = {
   presetId: PresetId;
   customSystemPrompt: string;
   useKnowledge: boolean;
+  availableDocs: KnowledgeDocSummary[];
+  selectedDocIds: string[];
   activeSystemPrompt: string;
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   onMessageChange: (value: string) => void;
   onPresetChange: (preset: PresetId) => void;
   onCustomSystemPromptChange: (value: string) => void;
   onUseKnowledgeChange: (value: boolean) => void;
+  onDocToggle: (docId: string) => void;
 };
 
 export const useChat = (): UseChatReturn => {
@@ -28,6 +32,19 @@ export const useChat = (): UseChatReturn => {
   const [presetId, setPresetId] = useState<PresetId>("polite");
   const [customSystemPrompt, setCustomSystemPrompt] = useState("");
   const [useKnowledge, setUseKnowledge] = useState(false);
+  const [availableDocs, setAvailableDocs] = useState<KnowledgeDocSummary[]>([]);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchKnowledgeDocs()
+      .then(setAvailableDocs)
+      .catch((err) => {
+        console.error(err);
+        setError((prev) =>
+          prev || "ドキュメント一覧の取得に失敗しました。サーバーを確認してください。",
+        );
+      });
+  }, []);
 
   const resolvedSystemPrompt = (): string => {
     if (customSystemPrompt.trim()) {
@@ -57,6 +74,7 @@ export const useChat = (): UseChatReturn => {
         messages: nextMessages,
         systemPrompt: resolvedSystemPrompt(),
         useKnowledge,
+        docIds: selectedDocIds,
       });
 
       if (data.error) {
@@ -76,6 +94,12 @@ export const useChat = (): UseChatReturn => {
     }
   };
 
+  const handleDocToggle = (docId: string) => {
+    setSelectedDocIds((prev) =>
+      prev.includes(docId) ? prev.filter((id) => id !== docId) : [...prev, docId],
+    );
+  };
+
   return {
     message,
     messages,
@@ -84,11 +108,14 @@ export const useChat = (): UseChatReturn => {
     presetId,
     customSystemPrompt,
     useKnowledge,
+    availableDocs,
+    selectedDocIds,
     activeSystemPrompt: resolvedSystemPrompt(),
     onSubmit: handleSubmit,
     onMessageChange: setMessage,
     onPresetChange: setPresetId,
     onCustomSystemPromptChange: setCustomSystemPrompt,
     onUseKnowledgeChange: setUseKnowledge,
+    onDocToggle: handleDocToggle,
   };
 };

@@ -1,7 +1,10 @@
 export type EmbeddingVector = number[];
 
 export type Chunk = {
-  id: number;
+  id: string;
+  docId: string;
+  title: string;
+  chunkIndex: number;
   text: string;
 };
 

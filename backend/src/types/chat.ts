@@ -9,4 +9,5 @@ export type ChatRequestBody = {
   messages?: ChatMessage[];
   systemPrompt?: string;
   useKnowledge?: boolean;
+  docIds?: string[];
 };

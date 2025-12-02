@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js && mkdir -p dist/knowledge && cp src/knowledge/*.txt dist/knowledge/",
+    "postbuild": "tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js && mkdir -p dist/knowledge/docs && cp knowledge/docs/*.txt dist/knowledge/docs/",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts,.js"
   },

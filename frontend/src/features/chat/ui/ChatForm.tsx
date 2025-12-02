@@ -5,6 +5,7 @@ type ChatFormProps = {
   loading: boolean;
   activeSystemPrompt: string;
   useKnowledge: boolean;
+  selectedDocIds: string[];
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onMessageChange: (value: string) => void;
   children?: ReactNode;
@@ -15,10 +16,15 @@ function ChatForm({
   loading,
   activeSystemPrompt,
   useKnowledge,
+  selectedDocIds,
   onSubmit,
   onMessageChange,
   children,
 }: ChatFormProps) {
+  const knowledgeLabel = useKnowledge
+    ? `ON (${selectedDocIds.length > 0 ? `${selectedDocIds.length}件選択` : "全ドキュメント"})`
+    : "OFF";
+
   return (
     <form onSubmit={onSubmit} className="chat-form chat-input">
       <label htmlFor="message">メッセージ</label>
@@ -38,9 +44,7 @@ function ChatForm({
       <div className="chat-input__actions">
         <div className="input-meta">
           <span className="active-system-prompt">現在のシステム: {activeSystemPrompt}</span>
-          <span className="knowledge-status">
-            ドキュメント参照: {useKnowledge ? "ON" : "OFF"}
-          </span>
+          <span className="knowledge-status">ドキュメント参照: {knowledgeLabel}</span>
         </div>
         <button type="submit" disabled={loading}>
           {loading ? "送信中…" : "送信"}
