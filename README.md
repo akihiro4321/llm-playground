@@ -1,41 +1,44 @@
 # llm-playground
 
-LLM を使った簡易チャットアプリ（backend: Express + TypeScript / frontend: Vite + React + TypeScript）。
+LLM を使った簡易チャットアプリ（backend: Express + TypeScript + Prisma / frontend: Vite + React + TypeScript）。
 
 ## 技術スタック
 
-- バックエンド: Node.js / Express / OpenAI SDK / TypeScript
+- バックエンド: Node.js / Express / OpenAI SDK / TypeScript / Prisma (SQLite)
 - フロントエンド: Vite / React 18 / TypeScript
 - スタイル: シンプルな CSS（`frontend/src/app/styles/index.css`）
+- データベース: SQLite (Prisma ORM)
+- ベクトル検索: Qdrant
 - 開発ポート: API `http://localhost:3001`、UI `http://localhost:5173`
 
 ## ディレクトリ構成
 
 ```
 llm-playground/
-├─ backend/            # API サーバー一式（Express, OpenAI 連携）
+├─ backend/            # API サーバー一式（Express, OpenAI, Prisma）
 │  ├─ src/
 │  │  ├─ config/          # 環境変数の読込・正規化
-│  │  ├─ routes/          # API ルート定義（/api/chat など）
-│  │  ├─ lib/             # 入力バリデーションなどの共通ロジック
+│  │  ├─ routes/          # API ルート定義（/api/chat, /history など集約）
+│  │  ├─ lib/             # 共通ロジック（Prismaクライアント, バリデーション）
 │  │  ├─ services/        # ドメインサービス（チャット処理）
 │  │  ├─ middleware/      # 共通ミドルウェア（エラーハンドラ等）
 │  │  ├─ infrastructure/  # 外部サービスクライアント（OpenAI など）
 │  │  ├─ knowledge/       # 参照ドキュメントと設定
-│  │  ├─ rag/             # チャンク分割・埋め込み・検索ロジック（Qdrant 連携）
+│  │  ├─ rag/             # RAGロジック（Qdrant 連携）
 │  │  ├─ types/           # 型定義
 │  │  ├─ modelConfig.ts   # モデル名・デフォルトプロンプト
 │  │  └─ server.ts        # アプリ起動とルーティング設定
-│  └─ dist/             # ビルド成果物（tsc / tsc-alias 実行後）
+│  ├─ prisma/             # Prisma スキーマとマイグレーション
+│  └─ dist/               # ビルド成果物
 ├─ frontend/           # チャット UI（Vite + React, Feature-Sliced Design）
 │  ├─ src/
 │  │  ├─ app/              # エントリ/App構成・グローバルスタイル
-│  │  ├─ pages/chat/       # ページコンテナ（薄いラッパー）
-│  │  ├─ features/         # UI＋ロジック単位の機能（チャット送信・プロンプト設定）
-│  │  ├─ widgets/          # ページを構成する大きめ部品（チャットログ、ヘッダー）
-│  │  ├─ entities/         # ドメイン型（メッセージ、プリセット）
-│  │  ├─ shared/api/       # `/api/chat` クライアント
-│  │  ├─ shared/config/    # プロンプトプリセットなどの設定
+│  │  ├─ pages/chat/       # ページコンテナ
+│  │  ├─ features/         # UI＋ロジック単位（チャット・サイドバー・設定）
+│  │  ├─ widgets/          # ページを構成する大きめ部品（チャットウィンドウ）
+│  │  ├─ entities/         # ドメイン型（メッセージ）
+│  │  ├─ shared/api/       # API クライアント（chat, history, knowledge）
+│  │  ├─ shared/config/    # 設定
 │  │  └─ app/styles/       # グローバルスタイル
 │  └─ vite.config.ts   # `/api` のバックエンドプロキシ設定
 └─ README.md           # 本ドキュメント
@@ -43,133 +46,61 @@ llm-playground/
 
 ### Backend コード構成（backend/src 配下）
 
-- `server.ts`: エントリーポイント。ミドルウェア登録、`/api` ルート、`/health`、エラーハンドラの組み立て。
-- `config/env.ts`: `PORT`、`OPENAI_API_KEY`、`QDRANT_URL` の読み込み・正規化。
-- `routes/chat.ts`: `/api/chat` のルーティング。バリデーション後にサービスへ委譲。
-- `services/chatService.ts`: チャット処理のサービス。`useKnowledge` を見て RAG 検索を組み込み、OpenAI 応答を生成。
-- `infrastructure/openaiClient.ts`: OpenAI クライアント生成とチャット API 呼び出し。API キー未設定時はスタブ応答。
-- `rag/`: RAG 用ユーティリティ。`loader.ts`（チャンク分割）、`embeddings.ts`（OpenAI で埋め込み生成）、`vectorIndexer.ts`（Qdrant 初期投入）、`vectorStore.ts`（Qdrant クライアント）、`search.ts`（Qdrant 検索）、`types.ts`（型）。
-- `knowledge/`: 参照ドキュメント（`sample.txt`）と設定。ビルド時に `dist/knowledge` へコピーされる。
-- `lib/chatValidation.ts`: リクエストの検証・整形（role チェック、空文字の排除、system プロンプト補完）。
-- `middleware/errorHandler.ts`: 共通エラーハンドラ。`HttpError` はステータス付き、それ以外は 500 にフォールバック。
-- `types/chat.ts`: チャットメッセージとリクエストボディの型定義。
-- `modelConfig.ts`: デフォルトのモデル名とシステムプロンプト。
+- `server.ts`: エントリーポイント。`buildApiRouter` を使用して `/api` 以下のルーティングを一括登録。
+- `routes/index.ts`: ルーターの集約（`/chat`, `/knowledge`, `/history`）。
+- `routes/history.ts`: チャット履歴（スレッド・メッセージ）の取得・削除。
+- `services/chatService.ts`: チャット処理。Prisma を使用して会話履歴の保存、RAG 検索、OpenAI 応答生成を行う。
+- `lib/prisma.ts`: Prisma Client のインスタンス化。
+- `rag/`: RAG 関連（Qdrant 連携）。
+- `prisma/schema.prisma`: SQLite データベーススキーマ定義（ChatThread, ChatMessage）。
 
 ### Frontend コード構成（Feature-Sliced Design）
 
-- `src/app/index.tsx`: アプリのエントリ。グローバルスタイル読み込みとページマウント。
-- `src/pages/chat/ui/ChatPage.tsx`: ページコンテナ。チャットウィジェットを配置する薄いページ。
-- `src/widgets/chat-window/ui/ChatWindow.tsx`: チャット画面全体のUIを構成（ヘッダー、ログ、入力、設定）。
-- `src/features/chat/model/useChat.ts`: チャット状態管理・送信処理のロジック。
-- `src/features/chat/ui/ChatForm.tsx`: 入力フォームと送信ボタン。システム設定スロット付き。
-- `src/features/chat/ui/SystemPromptSettings.tsx`: プリセット選択、カスタムプロンプト、RAGトグル。
-- `src/widgets/chat-log/ui/ChatLog.tsx`: メッセージ履歴表示。
-- `src/widgets/header/ui/Header.tsx`: ヒーローヘッダー。
-- `src/entities/message/`: メッセージ/ロール/プリセットIDの型定義。
-- `src/shared/api/chat.ts`: `/api/chat` クライアント。
-- `src/shared/config/chatConfig.ts`: プロンプトプリセット、デフォルトプロンプト、エンドポイント。
-- `src/app/styles/index.css`: 全体レイアウト・フォーム・メッセージリストなどのスタイル。
-- `vite.config.ts`: フロントの開発サーバーで `/api` をバックエンド (http://localhost:3001) へプロキシする設定。
-
-## アーキテクチャ構成（Mermaid）
-
-```mermaid
-flowchart LR
-  subgraph Frontend["Frontend (Vite + React)"]
-    AppEntry["app/index.tsx<br/>エントリ"]
-    ChatPage["pages/chat/ui/ChatPage<br/>ページコンテナ"]
-    Widgets["widgets/*<br/>チャットウィンドウ/ログ/ヘッダー"]
-    Features["features/*<br/>入力/プロンプト設定/ロジック"]
-    SharedApi["shared/api/chat.ts<br/>/api/chat クライアント"]
-    SharedCfg["shared/config/chatConfig.ts<br/>プリセット設定"]
-    Styles["app/styles/index.css<br/>UI スタイル"]
-    ConfigFE["vite.config.ts<br/>/api プロキシ"]
-  end
-
-  subgraph Backend["Backend (Express + TypeScript)"]
-    Server["src/server.ts<br/>アプリ起動・ルート登録"]
-    Routes["src/routes/chat.ts<br/>/api/chat ルート"]
-    Validation["src/lib/chatValidation.ts<br/>入力検証・整形"]
-    Service["src/services/chatService.ts<br/>チャット処理 + RAG"]
-    OpenAIInfra["src/infrastructure/openaiClient.ts<br/>OpenAI 呼び出し/スタブ"]
-    Env["src/config/env.ts<br/>環境変数読込"]
-    ErrorMW["src/middleware/errorHandler.ts<br/>エラーハンドラ"]
-    ModelCfg["src/modelConfig.ts<br/>モデル/システムプロンプト"]
-    RAG["src/rag/*<br/>チャンク化・埋め込み・検索 (Qdrant)"]
-    Knowledge["src/knowledge/sample.txt<br/>参照ドキュメント"]
-  end
-
-  User["ユーザー<br/>ブラウザ"]
-  OpenAISDK["OpenAI API"]
-
-  User --> AppEntry
-  AppEntry --> ChatPage
-  ChatPage --> Features
-  Features --> SharedApi
-  ChatPage --> Widgets
-  AppEntry --> Styles
-  ChatPage -- fetch /api/chat --> Server
-  ConfigFE -. dev proxy .- Server
-  Server --> Routes
-  Routes --> Validation
-  Routes --> Service
-  Service --> RAG
-  Service --> OpenAIInfra
-  Routes --> ErrorMW
-  Validation --> ModelCfg
-  Service --> ModelCfg
-  Env --> Server
-  Routes --> Env
-  OpenAIInfra --> OpenAISDK
-```
+- `src/widgets/chat-window/ui/ChatWindow.tsx`: メイン画面。サイドバーとチャットエリアをレイアウト。
+- `src/features/chat/ui/ChatSidebar.tsx`: 左側のサイドバー。チャット履歴（スレッド）一覧を表示。
+- `src/features/chat/model/useChat.ts`: チャットの全状態管理（メッセージ、スレッド、設定）。
+- `src/shared/api/history.ts`: 履歴取得・削除用 API クライアント。
 
 ## 機能概要
 
-- `POST /api/chat`: `{ messages: ChatMessage[], systemPrompt?: string }` を受け取り、OpenAI (`gpt-5-mini`) で応答を返す
-  - API キー未設定時はスタブで固定メッセージを返す
-- `GET /health`: ヘルスチェック
-- フロントエンド: 単一ページで入力 → `/api/chat` に送信 → 応答表示
+- `POST /api/chat`: メッセージ送信。履歴保存、RAG 検索（オプション）、回答生成を行い、ストリーミングで応答。
+- `GET /api/history/threads`: 過去のチャットスレッド一覧を取得。
+- `GET /api/history/threads/:id/messages`: 特定スレッドのメッセージ履歴を取得。
+- `DELETE /api/history/threads/:id`: スレッド削除。
+- `GET /health`: ヘルスチェック。
 
 ## 使い方
 
 ### 前提
 
-- Node.js 18+ 推奨
-- OpenAI API キー（`backend/.env` に設定）
-- ローカル Qdrant（デフォルト `http://localhost:6333` で稼働。`docker compose up -d` で起動可）
+- Node.js 18+
+- Docker (Qdrant 用)
+- OpenAI API キー
 
 ### セットアップ
 
 ```bash
-# backend
+# 1. バックエンド (依存インストール & DBセットアップ)
 cd backend
 npm install
 npm run dev
-npm run build # dist/server.js を生成（必要なら）
+# 初回は自動的に Prisma マイグレーションが適用され、dev.db が作成されます
 
-# frontend
+# 2. フロントエンド
 cd ../frontend
 npm install
 npm run dev  # http://localhost:5173
 
-# Qdrant (ルートで必要に応じて)
+# 3. インフラ (Qdrant)
 cd ..
 docker compose up -d
-
-# VS Code タスクでまとめて起動する場合
-# 「Tasks: Run Task」→「dev: all」で Qdrant → backend → frontend を順に起動
 ```
 
-バックエンドは `http://localhost:3001`、フロントエンドは `http://localhost:5173` で起動します。フロントエンドからの `/api` リクエストは Vite の proxy 設定でバックエンドに転送されます。
+### 環境変数 (.env)
 
-### 環境変数
-
-- `backend/.env`
-  - `OPENAI_API_KEY`: 必須。未設定時はスタブ応答。
-  - `PORT`: 任意。指定しない場合は 3001。
-  - `QDRANT_URL`: 任意。Qdrant エンドポイント（デフォルト `http://localhost:6333`）。
-
-### 備考
-
-- API キーを設定しない場合、バックエンドはスタブの応答を返します。
-- `/health` にアクセスするとヘルスチェックができます。
+`backend/.env` に以下を設定（`.env.example` 参考）:
+```
+OPENAI_API_KEY=sk-...
+# DATABASE_URL="file:./dev.db" (デフォルト)
+# QDRANT_URL="http://localhost:6333" (デフォルト)
+```
