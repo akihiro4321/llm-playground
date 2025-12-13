@@ -21,6 +21,20 @@ const ensureCollection = async (): Promise<void> => {
   }
 };
 
+/**
+ * Qdrantコレクションを削除します。
+ * 主に開発時の再インデックス目的で使用します。
+ */
+export const deleteQdrantCollection = async (): Promise<void> => {
+  try {
+    await qdrantClient.deleteCollection(QDRANT_COLLECTION);
+    console.log(`Qdrant collection '${QDRANT_COLLECTION}' deleted.`);
+  } catch (error) {
+    console.error(`Failed to delete Qdrant collection '${QDRANT_COLLECTION}':`, error);
+  }
+};
+
+
 // 追加されたチャンクがある場合は再インデックスが必要。
 const needsReindex = async (expectedCount: number): Promise<boolean> => {
   try {
@@ -51,7 +65,12 @@ export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<
       if (chunks.length === 0) return false;
 
       const shouldIndex = await needsReindex(chunks.length);
-      if (!shouldIndex) return true;
+      if (!shouldIndex) {
+        console.log("Qdrant index already up-to-date.");
+        return true;
+      }
+      
+      console.log(`Re-indexing ${chunks.length} chunks into Qdrant...`);
 
       const embeddings = await embedTexts(
         openaiClient,
@@ -75,6 +94,7 @@ export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<
 
       // Qdrantへまとめて投入し、初期化完了とする。
       await qdrantClient.upsert(QDRANT_COLLECTION, { points });
+      console.log("Qdrant indexing complete.");
       return true;
     } catch (error) {
       console.error("Failed to initialize Qdrant index:", error);
