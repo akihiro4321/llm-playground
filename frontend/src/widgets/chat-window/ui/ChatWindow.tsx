@@ -1,4 +1,4 @@
-import { ChatForm, SystemPromptSettings, useChat } from "@/features/chat";
+import { ChatForm, ChatSidebar, SystemPromptSettings, useChat } from "@/features/chat";
 import { PRESET_OPTIONS } from "@/shared/config/chatConfig";
 import ChatLog from "@/widgets/chat-log/ui/ChatLog";
 import Header from "@/widgets/header/ui/Header";
@@ -15,16 +15,30 @@ function ChatWindow() {
     availableDocs,
     selectedDocIds,
     activeSystemPrompt,
+    threads,
+    currentThreadId,
     onSubmit,
     onMessageChange,
     onPresetChange,
     onCustomSystemPromptChange,
     onUseKnowledgeChange,
     onDocToggle,
+    onSelectThread,
+    onNewChat,
+    onDeleteThread,
   } = useChat();
 
   return (
     <div className="layout">
+      <ChatSidebar
+        threads={threads}
+        currentThreadId={currentThreadId}
+        onNewChat={onNewChat}
+        onSelectThread={onSelectThread}
+        onDeleteThread={onDeleteThread}
+      />
+
+      {/* メインチャットエリア */}
       <div className="chat-area">
         <Header />
         <ChatLog messages={messages} loading={loading} error={error} />

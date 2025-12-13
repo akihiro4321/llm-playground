@@ -10,4 +10,5 @@ export type ChatRequestBody = {
   systemPrompt?: string;
   useKnowledge?: boolean;
   docIds?: string[];
+  threadId?: string;
 };

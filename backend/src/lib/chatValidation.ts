@@ -6,6 +6,7 @@ type NormalizedChatRequest = {
   chatMessages: ChatMessage[];
   useKnowledge: boolean;
   docIds: string[];
+  threadId?: string;
 };
 
 /**
@@ -55,6 +56,11 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
         : DEFAULT_SYSTEM_PROMPT,
   };
 
+  const threadId =
+    typeof body.threadId === "string" && body.threadId.trim().length > 0
+      ? body.threadId.trim()
+      : undefined;
+
   return {
     chatMessages: [systemMessage, ...sanitizedMessages],
     useKnowledge: body.useKnowledge === true,
@@ -68,5 +74,6 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
             ),
           )
         : [],
+    threadId,
   };
 };

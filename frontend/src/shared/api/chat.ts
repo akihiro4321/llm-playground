@@ -6,11 +6,13 @@ export type ChatRequestPayload = {
   systemPrompt: string;
   useKnowledge: boolean;
   docIds: string[];
+  threadId?: string;
 };
 
 export const sendChat = async (
   payload: ChatRequestPayload,
   onDelta: (delta: string) => void,
+  onThreadIdReceived?: (threadId: string) => void,
 ): Promise<void> => {
   const response = await fetch(API_ENDPOINT, {
     method: "POST",
@@ -20,6 +22,11 @@ export const sendChat = async (
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
+  }
+
+  const threadId = response.headers.get("X-Thread-Id");
+  if (threadId && onThreadIdReceived) {
+    onThreadIdReceived(threadId);
   }
 
   const reader = response.body?.getReader();

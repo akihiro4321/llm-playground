@@ -11,11 +11,14 @@
     "lint": "eslint . --ext .ts,.js"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "@qdrant/js-client-rest": "^1.16.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "openai": "^4.58.2"
+    "openai": "^4.58.2",
+    "prisma": "^7.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
