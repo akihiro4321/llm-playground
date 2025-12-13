@@ -22,8 +22,21 @@ export const buildChatRouter = (openaiClient: OpenAI | null): Router => {
    */
   router.post("/chat", async (req, res, next) => {
     try {
-      const reply = await handleChat(openaiClient, req.body as ChatRequestBody);
-      res.json({ reply });
+      const stream = await handleChat(openaiClient, req.body as ChatRequestBody);
+
+      // ストリーミング用ヘッダー設定
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        if (content) {
+          res.write(content);
+        }
+      }
+
+      res.end();
     } catch (error) {
       next(error);
     }

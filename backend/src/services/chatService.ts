@@ -11,12 +11,12 @@ import type { ChatMessage, ChatRequestBody } from "@/types/chat";
  *
  * @param openaiClient - OpenAIクライアント。未設定の場合はスタブとして動作する。
  * @param body - リクエストボディ。
- * @returns 生成された応答文字列。
+ * @returns 生成された応答のストリーム。
  */
 export const handleChat = async (
   openaiClient: OpenAI | null,
   body: ChatRequestBody | undefined,
-): Promise<string> => {
+): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> => {
   const { chatMessages, useKnowledge, docIds } = normalizeChatRequest(body);
   const [systemMessage, ...historyMessages] = chatMessages;
 

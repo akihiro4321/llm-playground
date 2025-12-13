@@ -1,11 +1,6 @@
 import type { ChatMessage } from "@/entities/message";
 import { API_ENDPOINT } from "@/shared/config/chatConfig";
 
-export type ChatResponse = {
-  reply?: string;
-  error?: string;
-};
-
 export type ChatRequestPayload = {
   messages: ChatMessage[];
   systemPrompt: string;
@@ -13,7 +8,10 @@ export type ChatRequestPayload = {
   docIds: string[];
 };
 
-export const sendChat = async (payload: ChatRequestPayload): Promise<ChatResponse> => {
+export const sendChat = async (
+  payload: ChatRequestPayload,
+  onDelta: (delta: string) => void,
+): Promise<void> => {
   const response = await fetch(API_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,5 +22,16 @@ export const sendChat = async (payload: ChatRequestPayload): Promise<ChatRespons
     throw new Error(`Request failed: ${response.status}`);
   }
 
-  return (await response.json()) as ChatResponse;
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("Response body is null");
+  }
+
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    onDelta(chunk);
+  }
 };

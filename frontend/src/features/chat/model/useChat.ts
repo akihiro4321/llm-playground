@@ -70,22 +70,26 @@ export const useChat = (): UseChatReturn => {
     setLoading(true);
 
     try {
-      const data = await sendChat({
-        messages: nextMessages,
-        systemPrompt: resolvedSystemPrompt(),
-        useKnowledge,
-        docIds: selectedDocIds,
-      });
+      setMessages((prev) => [...prev, { role: ChatRoles.Assistant, content: "" }]);
 
-      if (data.error) {
-        setError(data.error);
-        return;
-      }
-
-      const assistantReply =
-        data.reply || "（応答が空でした。モデル設定やネットワークを確認してください）";
-
-      setMessages((prev) => [...prev, { role: ChatRoles.Assistant, content: assistantReply }]);
+      await sendChat(
+        {
+          messages: nextMessages,
+          systemPrompt: resolvedSystemPrompt(),
+          useKnowledge,
+          docIds: selectedDocIds,
+        },
+        (delta) => {
+          setMessages((prev) => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg && lastMsg.role === ChatRoles.Assistant) {
+              const updatedLastMsg = { ...lastMsg, content: lastMsg.content + delta };
+              return [...prev.slice(0, -1), updatedLastMsg];
+            }
+            return [...prev, { role: ChatRoles.Assistant, content: delta }];
+          });
+        },
+      );
     } catch (err) {
       console.error(err);
       setError("送信に失敗しました。サーバーを確認してください。");
