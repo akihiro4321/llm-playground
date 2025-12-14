@@ -18,14 +18,21 @@ The project is divided into two main parts:
 - **Runtime:** Node.js
 - **Framework:** Express.js
 - **Language:** TypeScript
-- **AI Integration:** OpenAI SDK (`openai`)
+- **Dependency Injection:** `awilix`
+- **AI Integration:** OpenAI SDK (`openai`), LangChain (`@langchain/openai`, `@langchain/core`)
 - **Vector Search:** `@qdrant/js-client-rest`
 - **Development Tooling:** `tsx` for watch mode, `tsc` for building, `eslint` + `prettier` for code quality.
 - **Key Directories:**
     - `src/rag/`: Logic for document chunking, embeddings, and vector search.
     - `src/knowledge/`: Source documents for RAG.
-    - `src/services/`: Business logic (ChatService).
-    - `src/infrastructure/`: External service clients (OpenAI).
+    - `src/services/`: Business logic.
+    - `src/infrastructure/`:
+        - `container/`: DI Container configuration (Awilix).
+            - `index.ts`: Container setup.
+            - `*.module.ts`: Dependency registration modules.
+            - `types.ts`: Dependency type definitions.
+        - `repositories/`: Data access layer.
+    - `src/features/`: Feature-specific logic (e.g., agents).
 
 ### Frontend (`/frontend`)
 - **Framework:** React 18
@@ -80,6 +87,10 @@ The project is divided into two main parts:
 
 ## Code Conventions
 
+- **Dependency Injection (Backend):**
+    - Use `awilix` for dependency management.
+    - Register new dependencies in `backend/src/infrastructure/container/` modules.
+    - Define types in the respective module file and extend `Cradle` in `types.ts`.
 - **TypeScript:** Strict mode is enabled. Use explicit types where possible.
 - **Linting:** ESLint is configured. Respect existing rules.
 - **Formatting:** Prettier is used.
@@ -95,6 +106,11 @@ The project is divided into two main parts:
 - `README.md`: Detailed project documentation (Japanese).
 - `docker-compose.yml`: Qdrant service definition.
 - `backend/src/server.ts`: Backend entry point.
+- `backend/src/infrastructure/container/index.ts`: DI container setup.
 - `backend/src/rag/`: Core RAG implementation details.
 - `frontend/src/app/index.tsx`: Frontend entry point.
 - `frontend/vite.config.ts`: Proxy configuration.
+
+## Gemini Added Memories
+- 今後、仕様書などのドキュメントは日本語で出力してください。
+- 実装後は必ず `tsc` (型チェック) と `eslint` (Lintチェック) を実行してエラーがないことを確認してください。

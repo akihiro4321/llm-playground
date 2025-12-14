@@ -1,5 +1,3 @@
-import OpenAI from "openai";
-
 export const ChatRoles = {
   System: "system",
   User: "user",
@@ -9,11 +7,20 @@ export const ChatRoles = {
 
 export type ChatRole = (typeof ChatRoles)[keyof typeof ChatRoles];
 
+export type ToolCall = {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+};
+
 export type ChatMessage = {
   id?: string; // データベースによって生成されるID
   role: ChatRole;
   content: string | null; // Content can be null for tool_calls
-  tool_calls?: OpenAI.ChatCompletionMessageToolCall[];
+  tool_calls?: ToolCall[];
   tool_call_id?: string;
 };
 

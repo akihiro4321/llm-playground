@@ -1,9 +1,7 @@
-import type OpenAI from "openai";
-
 /**
  * OpenAI Function Calling用のツールスキーマ定義
  */
-export const toolsSchema: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+export const toolsSchema = [
   {
     type: "function",
     function: {

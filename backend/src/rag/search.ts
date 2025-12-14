@@ -1,4 +1,4 @@
-import type OpenAI from "openai";
+import type { OpenAIEmbeddings } from "@langchain/openai";
 
 import { knowledgeRepository } from "@/infrastructure/repositories/knowledgeRepository";
 import { embedTexts } from "@/rag/embeddings";
@@ -13,25 +13,25 @@ type SearchOptions = {
 /**
  * クエリを埋め込み化し、Qdrantで類似チャンクを検索して返します。
  *
- * @param openaiClient - OpenAIクライアント。未設定の場合は空配列を返します。
+ * @param embeddingsModel - LangChain OpenAIEmbeddingsモデル。未設定の場合は空配列を返します。
  * @param query - 類似検索するテキスト。
  * @param topK - 返すチャンク件数（デフォルト4件）。
  * @returns 類似度上位のチャンク配列。
  */
 export const searchRelevantChunks = async (
-  openaiClient: OpenAI | null,
+  embeddingsModel: OpenAIEmbeddings | null,
   query: string,
   options: SearchOptions = {},
 ): Promise<Chunk[]> => {
   const { topK = 4, docIds } = options;
   if (!query.trim()) return [];
 
-  if (!openaiClient) return [];
+  if (!embeddingsModel) return [];
 
-  const indexed = await ensureQdrantIndexed(openaiClient);
+  const indexed = await ensureQdrantIndexed(embeddingsModel);
   if (!indexed) return [];
 
-  const [queryEmbedding] = await embedTexts(openaiClient, [query]);
+  const [queryEmbedding] = await embedTexts(embeddingsModel, [query]);
   if (!queryEmbedding || queryEmbedding.length === 0) return [];
 
   try {

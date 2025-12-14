@@ -1,5 +1,4 @@
 import { Router } from "express";
-import type OpenAI from "openai";
 
 import { runLearningAgent } from "@/features/learning/simpleAgent";
 
@@ -7,15 +6,15 @@ import { runLearningAgent } from "@/features/learning/simpleAgent";
  * /api/learningルーターを生成します。
  * Function Calling学習用の同期型エンドポイントです。
  *
- * @param openaiClient - OpenAIクライアント
  * @returns 生成されたExpressルーター
  */
-export const buildLearningRouter = (openaiClient: OpenAI | null): Router => {
+export const buildLearningRouter = (): Router => {
   const router = Router();
 
   /**
    * 学習用のシンプルなAgentエンドポイント
    * ストリーミングを使わず、同期処理で完結します。
+   * 依存関係はDIコンテナ（req.cradle）から取得します。
    */
   router.post("/", async (req, res, next) => {
     try {
@@ -28,8 +27,11 @@ export const buildLearningRouter = (openaiClient: OpenAI | null): Router => {
         return;
       }
 
+      // DIコンテナから依存関係を取得
+      const { chatModel } = req.cradle;
+
       // 同期型Agentを実行
-      const reply = await runLearningAgent(openaiClient, message);
+      const reply = await runLearningAgent(chatModel, message);
 
       console.log("--- Learning Request End ---\n");
 

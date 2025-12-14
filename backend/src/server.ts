@@ -1,19 +1,30 @@
+import { scopePerRequest } from "awilix-express";
 import cors from "cors";
 import express from "express";
 
-import { loadEnv } from "@/config/env";
-import { createOpenAiClient } from "@/config/openai";
+import { configureContainer } from "@/infrastructure/container";
 import { errorHandler } from "@/middleware/errorHandler";
 import { buildApiRouter } from "@/routes";
 
 const app = express();
-const env = loadEnv();
-const openaiClient = createOpenAiClient(env.openaiApiKey);
+
+// DIコンテナのセットアップ
+const container = configureContainer();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", buildApiRouter(openaiClient));
+// Awilixミドルウェア: リクエストごとにスコープ付きコンテナを作成
+app.use(scopePerRequest(container));
+
+// req.cradle を利用可能にするミドルウェア
+app.use((req, _res, next) => {
+  // @ts-ignore awilix-express adds container, but we need to alias cradle
+  req.cradle = req.container.cradle;
+  next();
+});
+
+app.use("/api", buildApiRouter());
 
 /**
  * ヘルスチェック用の軽量エンドポイントです。
@@ -27,6 +38,7 @@ app.use(errorHandler);
 /**
  * アプリケーションサーバーを起動します。
  */
+const { env } = container.cradle;
 app.listen(env.port, () => {
   console.log(`Server listening on http://localhost:${env.port}`);
 });

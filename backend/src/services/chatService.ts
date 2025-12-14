@@ -1,9 +1,8 @@
-import type OpenAI from "openai";
+import type { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 import { chatRepository } from "@/infrastructure/repositories/chatRepository";
 import { openaiRepository } from "@/infrastructure/repositories/openaiRepository";
 import { normalizeChatRequest } from "@/lib/chatValidation";
-import { MODEL_NAME } from "@/modelConfig";
 import { searchRelevantChunks } from "@/rag/search";
 import { type ChatMessage, type ChatRequestBody,ChatRoles } from "@/types/chat";
 
@@ -11,15 +10,17 @@ import { type ChatMessage, type ChatRequestBody,ChatRoles } from "@/types/chat";
  * チャットリクエストを処理し、必要に応じて知識チャンクを付与したうえで応答を生成する。
  * 会話履歴のDB保存も行う。
  *
- * @param openaiClient - OpenAIクライアント。未設定の場合はスタブとして動作する。
+ * @param chatModel - LangChain ChatOpenAIインスタンス（チャット用）。未設定の場合はスタブとして動作する。
+ * @param embeddingsModel - LangChain OpenAIEmbeddingsインスタンス（RAG用）。
  * @param body - リクエストボディ。
  * @returns 生成された応答のストリームとスレッドID。
  */
 export const handleChat = async (
-  openaiClient: OpenAI | null,
+  chatModel: ChatOpenAI | null,
+  embeddingsModel: OpenAIEmbeddings | null,
   body: ChatRequestBody | undefined,
 ): Promise<{
-  stream: AsyncIterable<OpenAI.ChatCompletionChunk>;
+  stream: AsyncIterable<{ content: string }>;
   threadId: string;
 }> => {
   const { chatMessages, useKnowledge, docIds, threadId: requestedThreadId } = normalizeChatRequest(body);
@@ -54,7 +55,7 @@ export const handleChat = async (
 
   const relevantChunks =
     useKnowledge && lastUserMessage && lastUserMessage.content
-      ? await searchRelevantChunks(openaiClient, lastUserMessage.content, {
+      ? await searchRelevantChunks(embeddingsModel, lastUserMessage.content, {
           topK: 4,
           docIds,
         })
@@ -79,7 +80,7 @@ export const handleChat = async (
     ...historyMessages,
   ];
 
-  const originalStream = openaiRepository.generateChatReply(openaiClient, finalMessages, MODEL_NAME);
+  const originalStream = openaiRepository.generateChatReply(chatModel, finalMessages);
 
   // 3. ストリームをラップしてアシスタント応答を蓄積・保存
   async function* wrappedStream() {
@@ -108,9 +109,9 @@ export const handleChat = async (
           ) {
             assistantToolCallMessageId = createdMessage.id;
           }
-        } else {
-          // yieldされたのがChatCompletionChunkの場合
-          const content = item.choices[0]?.delta?.content;
+        } else if ("content" in item) {
+          // yieldされたのが LangChain のストリーミングチャンクの場合
+          const content = item.content;
           if (content) {
             accumulatedContent += content;
           }

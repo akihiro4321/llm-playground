@@ -1,5 +1,5 @@
+import type { OpenAIEmbeddings } from "@langchain/openai";
 import crypto from "crypto";
-import type OpenAI from "openai";
 
 import { knowledgeRepository } from "@/infrastructure/repositories/knowledgeRepository";
 import { embedTexts } from "@/rag/embeddings";
@@ -39,11 +39,11 @@ const needsReindex = async (expectedCount: number): Promise<boolean> => {
 /**
  * Qdrantコレクションの存在確認と、未インデックス時のチャンク投入を行う。
  *
- * @param openaiClient - OpenAIクライアント。未設定の場合はfalseを返す。
+ * @param embeddingsModel - LangChain OpenAIEmbeddingsモデル。未設定の場合はfalseを返す。
  * @returns インデックスが準備済みならtrue、失敗や未設定ならfalse。
  */
-export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<boolean> => {
-  if (!openaiClient) return false;
+export const ensureQdrantIndexed = async (embeddingsModel: OpenAIEmbeddings | null): Promise<boolean> => {
+  if (!embeddingsModel) return false;
 
   if (initPromise) return initPromise;
 
@@ -64,7 +64,7 @@ export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<
       console.log(`Re-indexing ${chunks.length} chunks into Qdrant...`);
 
       const embeddings = await embedTexts(
-        openaiClient,
+        embeddingsModel,
         chunks.map((chunk) => chunk.text),
       );
 
