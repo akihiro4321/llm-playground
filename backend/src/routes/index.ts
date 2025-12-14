@@ -4,6 +4,7 @@ import type OpenAI from "openai";
 import { buildChatRouter } from "./chat";
 import { buildHistoryRouter } from "./history";
 import { buildKnowledgeRouter } from "./knowledge";
+import { buildLearningRouter } from "./learning";
 
 /**
  * APIルーターを構築して返します。
@@ -23,6 +24,9 @@ export const buildApiRouter = (openaiClient: OpenAI | null): Router => {
 
   // /api/history
   router.use("/history", buildHistoryRouter());
+
+  // /api/learning
+  router.use("/learning", buildLearningRouter(openaiClient));
 
   return router;
 };

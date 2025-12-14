@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Agent Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .examples {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-left: 4px solid #4CAF50;
+      border-radius: 4px;
+    }
+    .examples h3 {
+      margin-top: 0;
+      color: #555;
+    }
+    .example-link {
+      color: #4CAF50;
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      margin: 5px 0;
+    }
+    .example-link:hover {
+      color: #45a049;
+    }
+    #output {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .status.loading {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Function Calling 学習テスト</h1>
+
+    <div class="examples">
+      <h3>サンプル質問（クリックで入力）</h3>
+      <span class="example-link" onclick="setQuestion('大阪の天気は？あと、123 + 456 はいくつ？')">
+        📍 大阪の天気は？あと、123 + 456 はいくつ？
+      </span>
+      <span class="example-link" onclick="setQuestion('東京の天気を教えて')">
+        🌤️ 東京の天気を教えて
+      </span>
+      <span class="example-link" onclick="setQuestion('999 + 111 を計算して')">
+        🔢 999 + 111 を計算して
+      </span>
+      <span class="example-link" onclick="setQuestion('名古屋の天気と、77+33の計算結果を知りたい')">
+        🔄 名古屋の天気と、77+33の計算結果を知りたい
+      </span>
+    </div>
+
+    <textarea id="question" rows="3" placeholder="質問を入力してください...">大阪の天気は？あと、123 + 456 はいくつ？</textarea>
+
+    <button onclick="testAgent()" id="sendBtn">送信</button>
+
+    <div id="status"></div>
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function setQuestion(text) {
+      document.getElementById('question').value = text;
+    }
+
+    async function testAgent() {
+      const question = document.getElementById('question').value.trim();
+      const outputDiv = document.getElementById('output');
+      const statusDiv = document.getElementById('status');
+      const sendBtn = document.getElementById('sendBtn');
+
+      if (!question) {
+        alert('質問を入力してください');
+        return;
+      }
+
+      // UI更新
+      sendBtn.disabled = true;
+      statusDiv.className = 'status loading';
+      statusDiv.textContent = '🚀 送信中...';
+      outputDiv.textContent = '';
+
+      try {
+        console.log('🚀 送信:', question);
+
+        const res = await fetch('http://localhost:3001/api/learning', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: question })
+        });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+
+        console.log('✅ 回答:', data.reply);
+
+        statusDiv.className = 'status success';
+        statusDiv.textContent = '✅ 回答を取得しました';
+        outputDiv.textContent = data.reply;
+
+      } catch (error) {
+        console.error('❌ エラー:', error);
+
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ エラーが発生しました';
+        outputDiv.textContent = `エラー: ${error.message}\n\nサーバーが起動しているか確認してください (npm run dev)`;
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // Enterキーで送信（Shift+Enterで改行）
+    document.getElementById('question').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        testAgent();
+      }
+    });
+  </script>
+</body>
+</html>
