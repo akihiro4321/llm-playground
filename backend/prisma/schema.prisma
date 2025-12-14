@@ -19,10 +19,12 @@ model ChatThread {
 }
 
 model ChatMessage {
-  id        Int        @id @default(autoincrement())
-  role      String // user, assistant, system
-  content   String
-  createdAt DateTime   @default(now())
-  threadId  String
-  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  id           String     @id @default(uuid())
+  role         String // user, assistant, system, tool
+  content      String?
+  tool_calls   String? // JSON string of tool_calls
+  tool_call_id String? // ID of the tool call
+  createdAt    DateTime   @default(now())
+  threadId     String
+  thread       ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 }

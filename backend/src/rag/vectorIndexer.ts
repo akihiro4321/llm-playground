@@ -1,24 +1,15 @@
 import crypto from "crypto";
 import type OpenAI from "openai";
 
+import { knowledgeRepository } from "@/infrastructure/repositories/knowledgeRepository";
 import { embedTexts } from "@/rag/embeddings";
 import { loadDocumentChunks } from "@/rag/loader";
-import { QDRANT_COLLECTION, QDRANT_VECTOR_SIZE, qdrantClient } from "@/rag/vectorStore";
 
 let initPromise: Promise<boolean> | null = null;
 
 // コレクションが存在しなければ作成する。
 const ensureCollection = async (): Promise<void> => {
-  try {
-    await qdrantClient.getCollection(QDRANT_COLLECTION);
-  } catch {
-    await qdrantClient.createCollection(QDRANT_COLLECTION, {
-      vectors: {
-        size: QDRANT_VECTOR_SIZE,
-        distance: "Cosine",
-      },
-    });
-  }
+  await knowledgeRepository.ensureCollection();
 };
 
 /**
@@ -27,10 +18,10 @@ const ensureCollection = async (): Promise<void> => {
  */
 export const deleteQdrantCollection = async (): Promise<void> => {
   try {
-    await qdrantClient.deleteCollection(QDRANT_COLLECTION);
-    console.log(`Qdrant collection '${QDRANT_COLLECTION}' deleted.`);
+    await knowledgeRepository.deleteCollection();
+    console.log(`Qdrant collection deleted.`);
   } catch (error) {
-    console.error(`Failed to delete Qdrant collection '${QDRANT_COLLECTION}':`, error);
+    console.error(`Failed to delete Qdrant collection:`, error);
   }
 };
 
@@ -38,7 +29,7 @@ export const deleteQdrantCollection = async (): Promise<void> => {
 // 追加されたチャンクがある場合は再インデックスが必要。
 const needsReindex = async (expectedCount: number): Promise<boolean> => {
   try {
-    const { count } = await qdrantClient.count(QDRANT_COLLECTION, { exact: true });
+    const count = await knowledgeRepository.countPoints();
     return count < expectedCount;
   } catch {
     return true;
@@ -93,7 +84,7 @@ export const ensureQdrantIndexed = async (openaiClient: OpenAI | null): Promise<
       if (points.length === 0) return false;
 
       // Qdrantへまとめて投入し、初期化完了とする。
-      await qdrantClient.upsert(QDRANT_COLLECTION, { points });
+      await knowledgeRepository.upsertPoints(points);
       console.log("Qdrant indexing complete.");
       return true;
     } catch (error) {

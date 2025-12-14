@@ -1,6 +1,6 @@
 import { BadRequestError } from "@/errors/httpError";
 import { DEFAULT_SYSTEM_PROMPT } from "@/modelConfig";
-import type { ChatMessage, ChatRequestBody } from "@/types/chat";
+import { type ChatMessage, type ChatRequestBody,ChatRoles } from "@/types/chat";
 
 type NormalizedChatRequest = {
   chatMessages: ChatMessage[];
@@ -19,7 +19,7 @@ const isValidMessage = (message: ChatMessage): boolean => {
   return (
     message &&
     typeof message === "object" &&
-    (message.role === "user" || message.role === "assistant") &&
+    (message.role === ChatRoles.User || message.role === ChatRoles.Assistant) &&
     typeof message.content === "string" &&
     message.content.trim().length > 0
   );
@@ -41,7 +41,7 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
     .filter((message): message is ChatMessage => isValidMessage(message))
     .map((message) => ({
       role: message.role,
-      content: message.content.trim(),
+      content: message.content?.trim() || "",
     }));
 
   if (sanitizedMessages.length === 0) {
@@ -49,7 +49,7 @@ export const normalizeChatRequest = (body: ChatRequestBody | undefined): Normali
   }
 
   const systemMessage: ChatMessage = {
-    role: "system",
+    role: ChatRoles.System,
     content:
       typeof body.systemPrompt === "string" && body.systemPrompt.trim()
         ? body.systemPrompt.trim()

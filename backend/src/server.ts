@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 
 import { loadEnv } from "@/config/env";
-import { createOpenAiClient } from "@/infrastructure/openaiClient";
+import { createOpenAiClient } from "@/config/openai";
 import { errorHandler } from "@/middleware/errorHandler";
 import { buildApiRouter } from "@/routes";
 

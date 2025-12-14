@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { prisma } from "@/lib/prisma";
+import { chatRepository } from "@/infrastructure/repositories/chatRepository";
 
 /**
  * 履歴関連のルーターを生成します。
@@ -16,15 +16,7 @@ export const buildHistoryRouter = (): Router => {
    */
   router.get("/threads", async (req, res, next) => {
     try {
-      const threads = await prisma.chatThread.findMany({
-        orderBy: { updatedAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+      const threads = await chatRepository.getThreads();
       res.json({ threads });
     } catch (error) {
       next(error);
@@ -38,16 +30,7 @@ export const buildHistoryRouter = (): Router => {
   router.get("/threads/:threadId/messages", async (req, res, next) => {
     const { threadId } = req.params;
     try {
-      const messages = await prisma.chatMessage.findMany({
-        where: { threadId },
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          role: true,
-          content: true,
-          createdAt: true,
-        },
-      });
+      const messages = await chatRepository.getMessages(threadId);
       res.json({ messages });
     } catch (error) {
       next(error);
@@ -61,9 +44,7 @@ export const buildHistoryRouter = (): Router => {
   router.delete("/threads/:threadId", async (req, res, next) => {
     const { threadId } = req.params;
     try {
-      await prisma.chatThread.delete({
-        where: { id: threadId },
-      });
+      await chatRepository.deleteThread(threadId);
       res.status(204).end();
     } catch (error) {
       next(error);

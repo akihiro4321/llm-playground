@@ -1,9 +1,9 @@
 import type OpenAI from "openai";
 
+import { knowledgeRepository } from "@/infrastructure/repositories/knowledgeRepository";
 import { embedTexts } from "@/rag/embeddings";
 import type { Chunk } from "@/rag/types";
 import { ensureQdrantIndexed } from "@/rag/vectorIndexer";
-import { QDRANT_COLLECTION, qdrantClient } from "@/rag/vectorStore";
 
 type SearchOptions = {
   topK?: number;
@@ -35,22 +35,11 @@ export const searchRelevantChunks = async (
   if (!queryEmbedding || queryEmbedding.length === 0) return [];
 
   try {
-    const results = await qdrantClient.search(QDRANT_COLLECTION, {
-      vector: queryEmbedding,
-      limit: topK,
-      with_payload: true,
-      filter:
-        docIds && docIds.length > 0
-          ? {
-              must: [
-                {
-                  key: "doc_id",
-                  match: { any: docIds },
-                },
-              ],
-            }
-          : undefined,
-    });
+    const results = await knowledgeRepository.searchPoints(
+      queryEmbedding,
+      topK,
+      docIds,
+    );
 
     return results
       .map<Chunk>((point, index) => ({
