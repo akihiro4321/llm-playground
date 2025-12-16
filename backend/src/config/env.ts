@@ -8,6 +8,9 @@ export type AppEnv = {
   port: number;
   openaiApiKey?: string;
   nodeEnv?: string;
+  langChainTracingV2?: string;
+  langChainApiKey?: string;
+  langChainProject?: string;
 };
 
 /**
@@ -39,5 +42,8 @@ export const loadEnv = (): AppEnv => {
     port: normalizePort(process.env.PORT),
     openaiApiKey: process.env.OPENAI_API_KEY?.trim(),
     nodeEnv: process.env.NODE_ENV,
+    langChainTracingV2: process.env.LANGCHAIN_TRACING_V2,
+    langChainApiKey: process.env.LANGCHAIN_API_KEY,
+    langChainProject: process.env.LANGCHAIN_PROJECT,
   };
 };

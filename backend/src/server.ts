@@ -39,6 +39,14 @@ app.use(errorHandler);
  * アプリケーションサーバーを起動します。
  */
 const { env } = container.cradle;
+
+if (env.langChainTracingV2 === "true") {
+  console.log("🛠️  LangSmith Tracing: ON");
+  if (env.langChainProject) {
+    console.log(`   Project: ${env.langChainProject}`);
+  }
+}
+
 app.listen(env.port, () => {
   console.log(`Server listening on http://localhost:${env.port}`);
 });
