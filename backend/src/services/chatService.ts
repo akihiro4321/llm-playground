@@ -1,4 +1,5 @@
-import type { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import type { ChatOpenAI } from "@langchain/openai";
+import type { QdrantVectorStore } from "@langchain/qdrant";
 
 import { chatRepository } from "@/infrastructure/repositories/chatRepository";
 import { openaiRepository } from "@/infrastructure/repositories/openaiRepository";
@@ -11,13 +12,13 @@ import { type ChatMessage, type ChatRequestBody,ChatRoles } from "@/types/chat";
  * 会話履歴のDB保存も行う。
  *
  * @param chatModel - LangChain ChatOpenAIインスタンス（チャット用）。未設定の場合はスタブとして動作する。
- * @param embeddingsModel - LangChain OpenAIEmbeddingsインスタンス（RAG用）。
+ * @param vectorStore - LangChain QdrantVectorStoreインスタンス（RAG用）。
  * @param body - リクエストボディ。
  * @returns 生成された応答のストリームとスレッドID。
  */
 export const handleChat = async (
   chatModel: ChatOpenAI | null,
-  embeddingsModel: OpenAIEmbeddings | null,
+  vectorStore: QdrantVectorStore | null,
   body: ChatRequestBody | undefined,
 ): Promise<{
   stream: AsyncIterable<{ content: string }>;
@@ -55,7 +56,7 @@ export const handleChat = async (
 
   const relevantChunks =
     useKnowledge && lastUserMessage && lastUserMessage.content
-      ? await searchRelevantChunks(embeddingsModel, lastUserMessage.content, {
+      ? await searchRelevantChunks(vectorStore, lastUserMessage.content, {
           topK: 4,
           docIds,
         })

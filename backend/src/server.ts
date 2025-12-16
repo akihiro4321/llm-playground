@@ -4,6 +4,7 @@ import express from "express";
 
 import { configureContainer } from "@/infrastructure/container";
 import { errorHandler } from "@/middleware/errorHandler";
+import { ensureQdrantIndexed } from "@/rag/vectorIndexer";
 import { buildApiRouter } from "@/routes";
 
 const app = express();
@@ -38,7 +39,7 @@ app.use(errorHandler);
 /**
  * アプリケーションサーバーを起動します。
  */
-const { env } = container.cradle;
+const { env, embeddingsModel } = container.cradle;
 
 if (env.langChainTracingV2 === "true") {
   console.log("🛠️  LangSmith Tracing: ON");
@@ -47,6 +48,9 @@ if (env.langChainTracingV2 === "true") {
   }
 }
 
-app.listen(env.port, () => {
-  console.log(`Server listening on http://localhost:${env.port}`);
+// Qdrantインデックスの初期化（サーバー起動前に実行）
+ensureQdrantIndexed(embeddingsModel).then(() => {
+  app.listen(env.port, () => {
+    console.log(`Server listening on http://localhost:${env.port}`);
+  });
 });

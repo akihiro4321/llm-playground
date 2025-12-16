@@ -22,11 +22,11 @@ export const buildChatRouter = (): Router => {
   router.post("/", async (req, res, next) => {
     try {
       // DIコンテナから依存関係を取得
-      const { chatModel, embeddingsModel } = req.cradle;
+      const { chatModel, vectorStore } = req.cradle;
 
       const { stream, threadId } = await handleChat(
         chatModel,
-        embeddingsModel,
+        vectorStore,
         req.body as ChatRequestBody
       );
 

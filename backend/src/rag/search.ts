@@ -1,9 +1,6 @@
-import type { OpenAIEmbeddings } from "@langchain/openai";
+import type { QdrantVectorStore } from "@langchain/qdrant";
 
-import { knowledgeRepository } from "@/infrastructure/repositories/knowledgeRepository";
-import { embedTexts } from "@/rag/embeddings";
 import type { Chunk } from "@/rag/types";
-import { ensureQdrantIndexed } from "@/rag/vectorIndexer";
 
 type SearchOptions = {
   topK?: number;
@@ -13,43 +10,43 @@ type SearchOptions = {
 /**
  * クエリを埋め込み化し、Qdrantで類似チャンクを検索して返します。
  *
- * @param embeddingsModel - LangChain OpenAIEmbeddingsモデル。未設定の場合は空配列を返します。
+ * @param vectorStore - LangChain QdrantVectorStoreインスタンス。未設定の場合は空配列を返します。
  * @param query - 類似検索するテキスト。
- * @param topK - 返すチャンク件数（デフォルト4件）。
+ * @param options - 検索オプション（topK, docIds）。
  * @returns 類似度上位のチャンク配列。
  */
 export const searchRelevantChunks = async (
-  embeddingsModel: OpenAIEmbeddings | null,
+  vectorStore: QdrantVectorStore | null,
   query: string,
-  options: SearchOptions = {},
+  options: SearchOptions = {}
 ): Promise<Chunk[]> => {
   const { topK = 4, docIds } = options;
   if (!query.trim()) return [];
 
-  if (!embeddingsModel) return [];
-
-  const indexed = await ensureQdrantIndexed(embeddingsModel);
-  if (!indexed) return [];
-
-  const [queryEmbedding] = await embedTexts(embeddingsModel, [query]);
-  if (!queryEmbedding || queryEmbedding.length === 0) return [];
+  if (!vectorStore) return [];
 
   try {
-    const results = await knowledgeRepository.searchPoints(
-      queryEmbedding,
-      topK,
-      docIds,
-    );
+    // Qdrant用メタデータフィルタの構築
+    const filter =
+      docIds && docIds.length > 0
+        ? {
+            should: docIds.map((id) => ({
+              key: "doc_id",
+              match: { value: id },
+            })),
+          }
+        : undefined;
+
+    // LangChain経由で検索
+    const results = await vectorStore.similaritySearch(query, topK, filter);
 
     return results
-      .map<Chunk>((point, index) => ({
-        id: typeof point.id === "string" ? point.id : `result-${index}`,
-        docId:
-          typeof point.payload?.doc_id === "string" ? point.payload.doc_id : "unknown-doc",
-        title: typeof point.payload?.title === "string" ? point.payload.title : "",
-        chunkIndex:
-          typeof point.payload?.chunk_index === "number" ? point.payload.chunk_index : index,
-        text: typeof point.payload?.text === "string" ? point.payload.text : "",
+      .map<Chunk>((doc, index) => ({
+        id: `result-${index}`, // DocumentにはIDが含まれない場合があるため仮ID
+        docId: doc.metadata.doc_id || "unknown-doc",
+        title: doc.metadata.title || "",
+        chunkIndex: doc.metadata.chunk_index ?? index,
+        text: doc.pageContent || "",
       }))
       .filter((chunk) => chunk.text.trim().length > 0);
   } catch (error) {
