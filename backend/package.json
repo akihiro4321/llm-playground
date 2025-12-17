@@ -2,13 +2,13 @@
   "name": "llm-playground-backend",
   "version": "0.1.0",
   "type": "module",
-  "main": "dist/server.js",
+  "main": "dist/app/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/app/server.ts",
     "build": "tsc -p tsconfig.json",
-    "postbuild": "tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js && mkdir -p dist/knowledge/docs && cp knowledge/docs/*.txt dist/knowledge/docs/",
-    "start": "node dist/server.js",
-    "db:delete-qdrant": "tsx src/rag/deleteQdrantIndex.ts",
+    "postbuild": "tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js && mkdir -p dist/modules/rag/knowledge/docs && cp src/modules/rag/knowledge/docs/*.txt dist/modules/rag/knowledge/docs/",
+    "start": "node dist/app/server.js",
+    "db:delete-qdrant": "tsx src/modules/rag/core/deleteQdrantIndex.ts",
     "lint": "eslint . --ext .ts,.js"
   },
   "dependencies": {
