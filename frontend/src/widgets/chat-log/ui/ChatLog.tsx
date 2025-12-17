@@ -4,6 +4,7 @@ const ROLE_LABEL: Record<ChatRole, string> = {
   [ChatRoles.Assistant]: "Assistant",
   [ChatRoles.User]: "You",
   [ChatRoles.System]: "System",
+  [ChatRoles.Tool]: "Tool",
 };
 
 type ChatLogProps = {
@@ -27,7 +28,14 @@ function ChatLog({ messages, loading, error }: ChatLogProps) {
           messages.map((msg, index) => (
             <div key={`${msg.role}-${index}`} className={`msg msg-${msg.role}`}>
               <span className="msg-role">{ROLE_LABEL[msg.role] ?? "Unknown"}</span>
-              <span className="msg-content">{msg.content}</span>
+              <span className="msg-content">
+                {msg.content}
+                {msg.tool_calls && !msg.content && (
+                  <span className="italic text-gray-500">
+                    (ツールを実行中: {msg.tool_calls.map((t) => t.function.name).join(", ")})
+                  </span>
+                )}
+              </span>
             </div>
           ))
         )}
