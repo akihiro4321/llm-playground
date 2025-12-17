@@ -1,5 +1,4 @@
 import type { PresetId, PresetOption } from "@/entities/message";
-
 import type { KnowledgeDocSummary } from "@/shared/api/knowledge";
 
 type SystemPromptSettingsProps = {

@@ -1,5 +1,4 @@
 import path from "path";
-import { fileURLToPath } from "url";
 
 export interface KnowledgeDocConfig {
   id: string;
@@ -7,8 +6,7 @@ export interface KnowledgeDocConfig {
   filePath: string;
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const KNOWLEDGE_DIR = path.resolve(__dirname, "../../knowledge/docs");
+const KNOWLEDGE_DIR = path.resolve(process.cwd(), "knowledge/docs");
 
 export const KNOWLEDGE_DOCS: KnowledgeDocConfig[] = [
   {
