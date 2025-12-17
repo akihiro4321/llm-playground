@@ -7,18 +7,23 @@ import { EMBEDDING_MODEL, MODEL_NAME } from "@/app/config/model";
  *
  * @param apiKey - OpenAIのAPIキー。未設定の場合は`null`を返します。
  * @param modelName - 使用するモデル名（デフォルト: modelConfig.tsのMODEL_NAME）。
+ * @param streaming - ストリーミングを有効にするかどうか（デフォルト: true）。
+ * @param temperature - サンプリング温度（デフォルト: 0）。
  * @returns 初期化済みのChatOpenAIインスタンスまたは`null`。
  */
 export const createOpenAiClient = (
   apiKey?: string,
-  modelName: string = MODEL_NAME
+  modelName: string = MODEL_NAME,
+  streaming: boolean = true,
+  temperature: number = 0
 ): ChatOpenAI | null => {
   if (!apiKey) return null;
 
   return new ChatOpenAI({
     apiKey,
     model: modelName,
-    streaming: true,
+    streaming,
+    temperature,
   });
 };
 
