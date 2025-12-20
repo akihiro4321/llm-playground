@@ -40,7 +40,19 @@ export const runLearningAgent = async (
   // 会話履歴の初期化
   const messages: BaseMessage[] = [
     new SystemMessage(
-      "あなたは親切なアシスタントです。ツールを使って正確な情報を提供してください。"
+      `
+      あなたは優秀なAIアシスタントです。
+      質問に答えるために、利用可能なツールを適切に使用してください。
+
+      【重要：思考プロセス】
+      ツールを使用する前、または回答する前に、必ず以下のフォーマットであなたの思考を出力してください。
+
+      Thought: [ここに、ユーザーの意図の理解、次にすべき行動、その理由などを記述する]
+
+      例：
+      Thought: ユーザーは天気を知りたがっている。場所は東京だ。get_current_weatherツールを使う必要がある。
+      (その後にツール呼び出し)
+      `
     ),
     new HumanMessage(userQuery),
   ];
@@ -50,7 +62,6 @@ export const runLearningAgent = async (
 
   while (turnCount < MAX_TURNS) {
     turnCount++;
-    console.log(`\n🔄 [TURN ${turnCount}]`);
 
     // LangChain APIを呼び出す（同期処理）
     const response = await modelWithTools.invoke(messages);
@@ -58,29 +69,15 @@ export const runLearningAgent = async (
     // 履歴に追加
     messages.push(response);
 
-    // レスポンスのログ出力
-    if (response.tool_calls && response.tool_calls.length > 0) {
-      console.log("🤖 [AI] Response: ツール要求");
-    } else {
-      console.log("🤖 [AI] Response:", response.content);
-    }
-
     // ツール呼び出しがある場合
     if (response.tool_calls && response.tool_calls.length > 0) {
       // 各ツールを実行
       for (const toolCall of response.tool_calls) {
-        const functionName = toolCall.name;
-        const functionArgs = toolCall.args;
-
-        console.log(`📞 [TOOL CALL] ${functionName}(${JSON.stringify(functionArgs)})`);
-
         // ツールの実行
         let result;
         if (toolCall.name === searchTool.name) {
-          console.log(`🔍 [SEARCH] ${toolCall.args.input}`);
           result = await searchTool.invoke(toolCall.args as any);
         } else {
-          console.log(`🛠️ [CUSTOM] ${toolCall.name}`);
           const toolFn = availableTools[toolCall.name];
           if (!toolFn) throw new Error(`未知のツール: ${toolCall.name}`);
           result = await toolFn(toolCall.args);
@@ -93,21 +90,24 @@ export const runLearningAgent = async (
             content: JSON.stringify(result),
           })
         );
-
-        console.log(`✅ [TOOL RESULT] ${JSON.stringify(result)}`);
       }
-
       // ツール実行後、次のターンへ
       continue;
     }
 
     // ツール呼び出しがない場合 = 最終回答
-    return typeof response.content === "string"
-      ? response.content
-      : JSON.stringify(response.content);
+    let finalContent =
+      typeof response.content === "string"
+        ? response.content
+        : JSON.stringify(response.content);
+
+    // "Thought:" から始まる思考プロセス部分を削除（ユーザーには見せない）
+    // Thought: ... (改行) までを削除
+    finalContent = finalContent.replace(/Thought:[\s\S]*?(\n\n|\n|$)/g, "").trim();
+
+    return finalContent;
   }
 
   // 最大ターン数に達した場合
   return `最大ターン数（${MAX_TURNS}）に達したため、処理を終了しました。`;
 };
-
