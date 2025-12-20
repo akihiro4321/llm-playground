@@ -83,6 +83,5 @@ type ToolFunction = (args: Record<string, unknown>) => unknown;
 export const availableTools: Record<string, ToolFunction> = {
   get_current_weather: (args) =>
     executeWeather(args.location as string, args.unit as string | undefined),
-  calculate_sum: (args) =>
-    executeCalculation(args.a as number, args.b as number),
+  calculate_sum: (args) => executeCalculation(args.a as number, args.b as number),
 };

@@ -5,8 +5,13 @@ import {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ChatOpenAI } from "@langchain/openai";
+import { TavilySearch } from "@langchain/tavily";
+
+import { loadEnv } from "@/app/config/env";
 
 import { availableTools, toolsSchema } from "./tools";
+
+const env = loadEnv();
 
 /**
  * 学習用の同期型Agentを実行します。
@@ -24,8 +29,13 @@ export const runLearningAgent = async (
     return "OpenAI APIキーが設定されていません。";
   }
 
+  const searchTool = new TavilySearch({
+    maxResults: 3,
+    tavilyApiKey: env.tavilyApiKey,
+  });
+
   // ツールをバインド
-  const modelWithTools = chatModel.bindTools(toolsSchema);
+  const modelWithTools = chatModel.bindTools([...toolsSchema, searchTool]);
 
   // 会話履歴の初期化
   const messages: BaseMessage[] = [
@@ -62,17 +72,19 @@ export const runLearningAgent = async (
         const functionName = toolCall.name;
         const functionArgs = toolCall.args;
 
-        console.log(
-          `📞 [TOOL CALL] ${functionName}(${JSON.stringify(functionArgs)})`
-        );
+        console.log(`📞 [TOOL CALL] ${functionName}(${JSON.stringify(functionArgs)})`);
 
         // ツールの実行
-        const toolFunction = availableTools[functionName];
-        if (!toolFunction) {
-          throw new Error(`未知のツール: ${functionName}`);
+        let result;
+        if (toolCall.name === searchTool.name) {
+          console.log(`🔍 [SEARCH] ${toolCall.args.input}`);
+          result = await searchTool.invoke(toolCall.args as any);
+        } else {
+          console.log(`🛠️ [CUSTOM] ${toolCall.name}`);
+          const toolFn = availableTools[toolCall.name];
+          if (!toolFn) throw new Error(`未知のツール: ${toolCall.name}`);
+          result = await toolFn(toolCall.args);
         }
-
-        const result = toolFunction(functionArgs);
 
         // ツール実行結果を履歴に追加
         messages.push(
@@ -98,3 +110,4 @@ export const runLearningAgent = async (
   // 最大ターン数に達した場合
   return `最大ターン数（${MAX_TURNS}）に達したため、処理を終了しました。`;
 };
+
