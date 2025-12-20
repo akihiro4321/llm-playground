@@ -18,7 +18,7 @@ backend/
 │  ├─ types/           # 型定義
 │  ├─ modelConfig.ts   # モデル名/プロンプト設定
 │  └─ server.ts        # アプリ起動・ルーティング
-└─ .env                # OPENAI_API_KEY / QDRANT_URL など（秘匿）
+└─ .env                # OPENAI_API_KEY / QDRANT_URL / TAVILY_API_KEY など（秘匿）
 ```
 
 ## Commands
