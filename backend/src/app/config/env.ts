@@ -11,6 +11,7 @@ export type AppEnv = {
   langChainTracingV2?: string;
   langChainApiKey?: string;
   langChainProject?: string;
+  tavilyApiKey?: string;
 };
 
 /**
@@ -45,5 +46,6 @@ export const loadEnv = (): AppEnv => {
     langChainTracingV2: process.env.LANGCHAIN_TRACING_V2,
     langChainApiKey: process.env.LANGCHAIN_API_KEY,
     langChainProject: process.env.LANGCHAIN_PROJECT,
+    tavilyApiKey: process.env.TAVILY_API_KEY,
   };
 };
