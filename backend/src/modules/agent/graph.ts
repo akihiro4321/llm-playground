@@ -33,13 +33,12 @@ const model = createOpenAiClient(
   env.openaiApiKey,
   MODEL_NAME,
   false, // streaming
-  0      // temperature
+  0 // temperature
 );
 
 if (!model) {
   throw new Error("OpenAI API Key is missing");
 }
-
 
 const modelWithTools = model.bindTools(tools);
 
@@ -49,9 +48,24 @@ async function callModel(state: AgentState) {
   return { messages: [response] };
 }
 
+function shouldContinue(state: AgentState) {
+  const { messages } = state;
+  const lastMessage = messages[messages.length - 1];
+  if (
+    "tool_calls" in lastMessage &&
+    Array.isArray(lastMessage.tool_calls) &&
+    lastMessage.tool_calls.length > 0
+  ) {
+    return "tools";
+  }
+  return "__end__";
+}
+
 const workflow = new StateGraph(MessagesAnnotation)
   .addNode("agent", callModel)
   .addNode("tools", toolNode)
-  .addEdge("__start__", "agent");
+  .addEdge("__start__", "agent")
+  .addConditionalEdges("agent", shouldContinue)
+  .addEdge("tools", "agent");
 
 export const graph = workflow.compile();
