@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini OCR Test (Resume Parser)</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background: #f0f2f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      h1 {
+        color: #1a73e8;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      p.description {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+      }
+      .upload-section {
+        border: 2px dashed #ccc;
+        padding: 40px;
+        text-align: center;
+        border-radius: 8px;
+        background: #fafafa;
+        cursor: pointer;
+        transition: border-color 0.3s;
+      }
+      .upload-section:hover {
+        border-color: #1a73e8;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      .btn {
+        background: #1a73e8;
+        color: white;
+        padding: 12px 40px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        display: block;
+        margin: 20px auto;
+        transition: background 0.3s;
+      }
+      .btn:hover {
+        background: #1557b0;
+      }
+      .btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      #status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 6px;
+        display: none;
+      }
+      .status-loading {
+        display: block !important;
+        background: #e8f0fe;
+        color: #1967d2;
+      }
+      .status-success {
+        display: block !important;
+        background: #e6f4ea;
+        color: #137333;
+      }
+      .status-error {
+        display: block !important;
+        background: #fce8e6;
+        color: #c5221f;
+      }
+      #result-container {
+        margin-top: 30px;
+        display: none;
+      }
+      pre {
+        background: #202124;
+        color: #e8eaed;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .file-info {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📄 Gemini OCR 解析テスト</h1>
+      <p class="description">職務経歴書(PDF)をアップロードして、AIが構造化データに変換します。</p>
+
+      <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+        <div>📁 クリックしてPDFを選択するか、ここにドラッグ＆ドロップ</div>
+        <div id="fileName" class="file-info"></div>
+        <input type="file" id="fileInput" accept="application/pdf" onchange="handleFileSelect(event)" />
+      </div>
+
+      <button id="uploadBtn" class="btn" onclick="uploadFile()" disabled>解析実行</button>
+
+      <div id="status"></div>
+
+      <div id="result-container">
+        <h3>📊 解析結果 (JSON)</h3>
+        <pre id="output"></pre>
+      </div>
+    </div>
+
+    <script>
+      let selectedFile = null;
+
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file && file.type === "application/pdf") {
+          selectedFile = file;
+          document.getElementById("fileName").textContent = `選択中: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          document.getElementById("uploadBtn").disabled = false;
+        } else {
+          alert("PDFファイルを選択してください");
+          event.target.value = "";
+        }
+      }
+
+      async function uploadFile() {
+        if (!selectedFile) return;
+
+        const btn = document.getElementById("uploadBtn");
+        const status = document.getElementById("status");
+        const output = document.getElementById("output");
+        const resultContainer = document.getElementById("result-container");
+
+        // UI初期化
+        btn.disabled = true;
+        status.className = "status-loading";
+        status.textContent = "⌛ Geminiが解析中... 数秒かかります。";
+        resultContainer.style.display = "none";
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        try {
+          const res = await fetch("http://localhost:3001/api/learning/ocr", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            throw new Error(data.error || `HTTP ${res.status}: 解析に失敗しました`);
+          }
+
+          console.log("✅ Result:", data);
+
+          status.className = "status-success";
+          status.textContent = "✅ 解析が完了しました！";
+          
+          // JSONをパースして整形
+          const parsedResult = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+          output.textContent = JSON.stringify(parsedResult, null, 2);
+          resultContainer.style.display = "block";
+
+        } catch (error) {
+          console.error("❌ Error:", error);
+          status.className = "status-error";
+          status.textContent = `❌ エラー: ${error.message}`;
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ドラッグ&ドロップの簡易対応
+      const dropZone = document.querySelector('.upload-section');
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#1a73e8';
+      });
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#ccc';
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#ccc';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type === "application/pdf") {
+          document.getElementById('fileInput').files = e.dataTransfer.files;
+          handleFileSelect({ target: { files: e.dataTransfer.files } });
+        }
+      });
+    </script>
+  </body>
+</html>

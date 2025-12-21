@@ -1,6 +1,10 @@
 import { Router } from "express";
+import multer from "multer";
 
 import { runLearningAgent, runMultiAgentSystem } from "@/modules/learning/core/simpleAgent";
+
+import { processResumeOpenAI } from "../core/ocrAgentOpenAI";
+const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * /api/learningルーターを生成します。
@@ -65,6 +69,16 @@ export const buildLearningRouter = (): Router => {
       res.json({ reply });
     } catch (error) {
       next(error);
+    }
+  });
+
+  router.post("/ocr", upload.single("file"), async (req, res, next) => {
+    try {
+      if (!req.file) throw new Error("ファイルがありません");
+      const result = await processResumeOpenAI(req.file.buffer);
+      res.json({ result });
+    } catch (err) {
+      next(err);
     }
   });
 
