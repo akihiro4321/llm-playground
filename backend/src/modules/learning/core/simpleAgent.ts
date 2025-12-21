@@ -6,9 +6,11 @@ import {
 } from "@langchain/core/messages";
 import type { ChatOpenAI } from "@langchain/openai";
 import { TavilySearch } from "@langchain/tavily";
+import { traceable } from "langsmith/traceable";
 
 import { loadEnv } from "@/app/config/env";
 
+import { callResearcher, callSupervisor, callWriter } from "./multiAgent";
 import { availableTools, toolsSchema } from "./tools";
 
 const env = loadEnv();
@@ -97,9 +99,7 @@ export const runLearningAgent = async (
 
     // ツール呼び出しがない場合 = 最終回答
     let finalContent =
-      typeof response.content === "string"
-        ? response.content
-        : JSON.stringify(response.content);
+      typeof response.content === "string" ? response.content : JSON.stringify(response.content);
 
     // "Thought:" から始まる思考プロセス部分を削除（ユーザーには見せない）
     // Thought: ... (改行) までを削除
@@ -111,3 +111,63 @@ export const runLearningAgent = async (
   // 最大ターン数に達した場合
   return `最大ターン数（${MAX_TURNS}）に達したため、処理を終了しました。`;
 };
+
+/**
+ * マルチエージェントシステムを一つのトレースとして実行します。
+ */
+export const runMultiAgentSystem = traceable(
+  async (chatModel: ChatOpenAI | null, userQuery: string): Promise<string> => {
+    if (!chatModel) {
+      return "OpenAI APIキーが設定されていません。";
+    }
+
+    const history: BaseMessage[] = [new HumanMessage(userQuery)];
+    let nextAgent = "Supervisor";
+    let currentInstruction = "";
+    let loopCount = 0;
+    const MAX_LOOPS = 10;
+
+    console.log("\n👥 [MultiAgent] System Start");
+
+    while (loopCount < MAX_LOOPS) {
+      loopCount++;
+      console.log(`\n🔄 [Loop ${loopCount}] Next: ${nextAgent}`);
+
+      if (nextAgent === "Supervisor") {
+        const result = await callSupervisor(chatModel, history);
+
+        if (result.next === "FINISH") {
+          console.log("🏁 [MultiAgent] Finished");
+          break;
+        }
+
+        nextAgent = result.next;
+        currentInstruction = result.instruction || "";
+      } else if (nextAgent === "Researcher") {
+        const result = await callResearcher(chatModel, currentInstruction);
+
+        history.push(new HumanMessage({ name: "Researcher", content: `【調査結果】\n${result}` }));
+        nextAgent = "Supervisor";
+      } else if (nextAgent === "Writer") {
+        // historyを文字列コンテキストに変換
+        const context = history.map((m) => `[${m.name || "User"}]: ${m.content}`).join("\n\n");
+
+        const result = await callWriter(chatModel, context, currentInstruction);
+
+        history.push(new HumanMessage({ name: "Writer", content: result }));
+        nextAgent = "Supervisor";
+      }
+    }
+
+    if (loopCount >= MAX_LOOPS) {
+      return "システムエラー: ループ回数が上限に達しました。";
+    }
+
+    // 最後のメッセージ（Writerの成果物など）を返す
+    const lastMessage = history[history.length - 1];
+    return typeof lastMessage.content === "string"
+      ? lastMessage.content
+      : JSON.stringify(lastMessage.content);
+  },
+  { name: "MultiAgentSystem" }
+);

@@ -121,12 +121,23 @@
       <div class="api-selector">
         <h3>呼び出し先エージェントを選択</h3>
         <label>
-          <input type="radio" name="apiPath" value="/api/learning" checked onclick="updateExamples('standard')"> 
+          <input
+            type="radio"
+            name="apiPath"
+            value="/api/learning"
+            checked
+            onclick="updateExamples('standard')"
+          />
           標準 (天気・計算)
         </label>
         <label>
-          <input type="radio" name="apiPath" value="/api/learning/web_search" onclick="updateExamples('search')"> 
-          Web検索 (Tavily)
+          <input
+            type="radio"
+            name="apiPath"
+            value="/api/learning/multi"
+            onclick="updateExamples('multiAgent')"
+          />
+          マルチエージェント
         </label>
       </div>
 
@@ -147,19 +158,19 @@
         standard: [
           "大阪の天気は？あと、123 + 456 はいくつ？",
           "東京の天気を教えて",
-          "999 + 111 を計算して"
+          "999 + 111 を計算して",
         ],
-        search: [
+        multiAgent: [
           "最新のAIニュースについて教えて",
           "今日の日本の株価の状況は？",
-          "Appleの最新製品について調べて"
-        ]
+          "Appleの最新製品について調べて",
+        ],
       };
 
       function updateExamples(type) {
         const container = document.getElementById("example-container");
         container.innerHTML = "<h3>サンプル質問</h3>";
-        examples[type].forEach(text => {
+        examples[type].forEach((text) => {
           const span = document.createElement("span");
           span.className = "example-link";
           span.textContent = text;
@@ -174,14 +185,14 @@
       }
 
       // 初期化
-      updateExamples('standard');
+      updateExamples("standard");
 
       async function testAgent() {
         const question = document.getElementById("question").value.trim();
         const outputDiv = document.getElementById("output");
         const statusDiv = document.getElementById("status");
         const sendBtn = document.getElementById("sendBtn");
-        
+
         // 選択されているAPIパスを取得
         const selectedApi = document.querySelector('input[name="apiPath"]:checked').value;
 

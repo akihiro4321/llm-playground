@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { runLearningAgent } from "@/modules/learning/core/simpleAgent";
+import { runLearningAgent, runMultiAgentSystem } from "@/modules/learning/core/simpleAgent";
 
 /**
  * /api/learningルーターを生成します。
@@ -32,6 +32,32 @@ export const buildLearningRouter = (): Router => {
 
       // 同期型Agentを実行
       const reply = await runLearningAgent(chatModel, message);
+
+      console.log("--- Learning Request End ---\n");
+
+      // 結果を返す
+      res.json({ reply });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.post("/multi", async (req, res, next) => {
+    try {
+      console.log("\n--- Learning Request Start ---");
+
+      const { message } = req.body as { message?: string };
+
+      if (!message || typeof message !== "string") {
+        res.status(400).json({ error: "messageフィールドが必要です" });
+        return;
+      }
+
+      // DIコンテナから依存関係を取得
+      const { chatModel } = req.cradle;
+
+      // 同期型Agentを実行
+      const reply = await runMultiAgentSystem(chatModel, message);
 
       console.log("--- Learning Request End ---\n");
 
