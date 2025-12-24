@@ -1,10 +1,10 @@
 # llm-playground
 
-LLM を使った簡易チャットアプリ（backend: Express + TypeScript + Prisma / frontend: Vite + React + TypeScript）。
+LLM を使った簡易チャットアプリ（backend: Hono + TypeScript + Prisma / frontend: Vite + React + TypeScript）。
 
 ## 技術スタック
 
-- バックエンド: Node.js / Express / OpenAI SDK / TypeScript / Prisma (SQLite)
+- バックエンド: Node.js / Hono / OpenAI SDK / TypeScript / Prisma (SQLite)
 - フロントエンド: Vite / React 18 / TypeScript
 - スタイル: シンプルな CSS（`frontend/src/app/styles/index.css`）
 - データベース: SQLite (Prisma ORM)
@@ -15,7 +15,7 @@ LLM を使った簡易チャットアプリ（backend: Express + TypeScript + Pr
 
 ```
 llm-playground/
-├─ backend/            # API サーバー一式（Express, OpenAI, Prisma）
+├─ backend/            # API サーバー一式（Hono, OpenAI, Prisma）
 │  ├─ src/
 │  │  ├─ config/          # 環境変数の読込・正規化
 │  │  ├─ routes/          # API ルート定義（/api/chat, /history など集約）

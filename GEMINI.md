@@ -5,7 +5,7 @@
 `llm-playground` is a full-stack application designed as a simplified chat interface leveraging Large Language Models (LLMs) via the OpenAI API. It demonstrates a Retrieval-Augmented Generation (RAG) architecture using Qdrant as a vector database.
 
 The project is divided into two main parts:
-- **Backend:** A Node.js/Express application handling API requests, LLM integration, and RAG logic.
+- **Backend:** A Node.js/Hono application handling API requests, LLM integration, and RAG logic.
 - **Frontend:** A React application (built with Vite) providing the user interface, structured according to Feature-Sliced Design (FSD) principles.
 
 ## Architecture & Tech Stack
@@ -16,7 +16,7 @@ The project is divided into two main parts:
 
 ### Backend (`/backend`)
 - **Runtime:** Node.js
-- **Framework:** Express.js
+- **Framework:** Hono
 - **Language:** TypeScript
 - **Dependency Injection:** `awilix`
 - **AI Integration:** OpenAI SDK (`openai`), LangChain (`@langchain/openai`, `@langchain/core`)
