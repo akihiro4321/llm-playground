@@ -1,86 +1,80 @@
-import { Router } from "express";
-import multer from "multer";
+import { Hono } from "hono";
 
 import { runLearningAgent, runMultiAgentSystem } from "@/modules/learning/core/simpleAgent";
+import { HonoEnv } from "@/shared/types/hono";
 
 import { processResumeOpenAI } from "../core/ocrAgentOpenAI";
-const upload = multer({ storage: multer.memoryStorage() });
 
 /**
  * /api/learningルーターを生成します。
  * Function Calling学習用の同期型エンドポイントです。
  *
- * @returns 生成されたExpressルーター
+ * @returns 生成されたHonoアプリケーション
  */
-export const buildLearningRouter = (): Router => {
-  const router = Router();
+export const buildLearningRouter = () => {
+  const app = new Hono<HonoEnv>();
 
   /**
    * 学習用のシンプルなAgentエンドポイント
    * ストリーミングを使わず、同期処理で完結します。
-   * 依存関係はDIコンテナ（req.cradle）から取得します。
+   * 依存関係はDIコンテナ（c.get('cradle')）から取得します。
    */
-  router.post("/", async (req, res, next) => {
-    try {
-      console.log("\n--- Learning Request Start ---");
+  app.post("/", async (c) => {
+    console.log("\n--- Learning Request Start ---");
 
-      const { message } = req.body as { message?: string };
+    const body = await c.req.json<{ message?: string }>();
+    const { message } = body;
 
-      if (!message || typeof message !== "string") {
-        res.status(400).json({ error: "messageフィールドが必要です" });
-        return;
-      }
-
-      // DIコンテナから依存関係を取得
-      const { chatModel } = req.cradle;
-
-      // 同期型Agentを実行
-      const reply = await runLearningAgent(chatModel, message);
-
-      console.log("--- Learning Request End ---\n");
-
-      // 結果を返す
-      res.json({ reply });
-    } catch (error) {
-      next(error);
+    if (!message || typeof message !== "string") {
+      return c.json({ error: "messageフィールドが必要です" }, 400);
     }
+
+    // DIコンテナから依存関係を取得
+    const { chatModel } = c.get("cradle");
+
+    // 同期型Agentを実行
+    const reply = await runLearningAgent(chatModel, message);
+
+    console.log("--- Learning Request End ---\n");
+
+    // 結果を返す
+    return c.json({ reply });
   });
 
-  router.post("/multi", async (req, res, next) => {
-    try {
-      console.log("\n--- Learning Request Start ---");
+  app.post("/multi", async (c) => {
+    console.log("\n--- Learning Request Start ---");
 
-      const { message } = req.body as { message?: string };
+    const body = await c.req.json<{ message?: string }>();
+    const { message } = body;
 
-      if (!message || typeof message !== "string") {
-        res.status(400).json({ error: "messageフィールドが必要です" });
-        return;
-      }
-
-      // DIコンテナから依存関係を取得
-      const { chatModel } = req.cradle;
-
-      // 同期型Agentを実行
-      const reply = await runMultiAgentSystem(chatModel, message);
-
-      console.log("--- Learning Request End ---\n");
-
-      // 結果を返す
-      res.json({ reply });
-    } catch (error) {
-      next(error);
+    if (!message || typeof message !== "string") {
+      return c.json({ error: "messageフィールドが必要です" }, 400);
     }
+
+    // DIコンテナから依存関係を取得
+    const { chatModel } = c.get("cradle");
+
+    // 同期型Agentを実行
+    const reply = await runMultiAgentSystem(chatModel, message);
+
+    console.log("--- Learning Request End ---\n");
+
+    // 結果を返す
+    return c.json({ reply });
   });
 
-  router.post("/ocr", upload.single("file"), async (req, res, next) => {
-    try {
-      if (!req.file) throw new Error("ファイルがありません");
-      const result = await processResumeOpenAI(req.file.buffer);
-      res.json({ result });
-    } catch (err) {
-      next(err);
+  app.post("/ocr", async (c) => {
+    const body = await c.req.parseBody();
+    const file = body["file"];
+
+    if (!file || !(file instanceof File)) {
+      throw new Error("ファイルがありません");
     }
+
+    const buffer = await file.arrayBuffer();
+    const result = await processResumeOpenAI(Buffer.from(buffer));
+    return c.json({ result });
   });
 
-  return router;
+  return app;
 };

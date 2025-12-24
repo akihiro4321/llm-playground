@@ -1,55 +1,51 @@
-import { Router } from "express";
+import { Hono } from "hono";
+import { streamText } from "hono/streaming";
 
 import { handleChat } from "@/modules/chat/core/service";
 import type { ChatRequestBody } from "@/shared/types/chat";
+import { HonoEnv } from "@/shared/types/hono";
 
 /**
  * /api/chatルーターを生成します。
  * RAGオン時は関連チャンクを取得してから回答を生成します。
  *
- * @returns 生成されたExpressルーター。
+ * @returns 生成されたHonoアプリケーション。
  */
-export const buildChatRouter = (): Router => {
-  const router = Router();
+export const buildChatRouter = () => {
+  const app = new Hono<HonoEnv>();
 
   /**
    * チャットリクエストを処理し、必要に応じて知識チャンクを付与した上で応答を返します。
    *
    * @remarks
    * `useKnowledge` が有効かつユーザーメッセージが存在する場合のみEmbedding検索を実行します。
-   * 依存関係はDIコンテナ（req.cradle）から取得します。
+   * 依存関係はDIコンテナ（c.get('cradle')）から取得します。
    */
-  router.post("/", async (req, res, next) => {
-    try {
-      // DIコンテナから依存関係を取得
-      const { chatModel, vectorStore } = req.cradle;
+  app.post("/", async (c) => {
+    // DIコンテナから依存関係を取得
+    const { chatModel, vectorStore } = c.get("cradle");
 
-      const { stream, threadId } = await handleChat(
-        chatModel,
-        vectorStore,
-        req.body as ChatRequestBody
-      );
+    const body = await c.req.json<ChatRequestBody>();
 
-      // ストリーミング用ヘッダー設定
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
+    const { stream, threadId } = await handleChat(
+      chatModel,
+      vectorStore,
+      body
+    );
 
-      // スレッドIDをヘッダーで返す
-      res.setHeader("X-Thread-Id", threadId);
+    // スレッドIDをヘッダーで返す
+    c.header("X-Thread-Id", threadId);
 
+    // ストリーミングレスポンス
+    return streamText(c, async (streamWriter) => {
       for await (const chunk of stream) {
-        const content = chunk.content || "";
-        if (content) {
-          res.write(content);
+        const content = chunk.content;
+        if (content && typeof content === "string") {
+          await streamWriter.write(content);
         }
       }
-
-      res.end();
-    } catch (error) {
-      next(error);
-    }
+    });
   });
 
-  return router;
+  return app;
 };

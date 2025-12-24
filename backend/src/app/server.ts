@@ -1,40 +1,32 @@
-import { scopePerRequest } from "awilix-express";
-import cors from "cors";
-import express from "express";
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 import { configureContainer } from "@/app/container";
 import { buildApiRouter } from "@/app/routes";
 import { ensureQdrantIndexed } from "@/modules/rag/core/vectorIndexer";
+import { scopePerRequest } from "@/shared/middleware/awilix";
 import { errorHandler } from "@/shared/middleware/errorHandler";
+import { HonoEnv } from "@/shared/types/hono";
 
-const app = express();
+const app = new Hono<HonoEnv>();
 
 // DIコンテナのセットアップ
 const container = configureContainer();
 
-app.use(cors());
-app.use(express.json());
+app.use("*", cors());
+app.use("*", scopePerRequest(container));
 
-// Awilixミドルウェア: リクエストごとにスコープ付きコンテナを作成
-app.use(scopePerRequest(container));
-
-// req.cradle を利用可能にするミドルウェア
-app.use((req, _res, next) => {
-  // @ts-ignore awilix-express adds container, but we need to alias cradle
-  req.cradle = req.container.cradle;
-  next();
-});
-
-app.use("/api", buildApiRouter());
+app.route("/api", buildApiRouter());
 
 /**
  * ヘルスチェック用の軽量エンドポイントです。
  */
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+app.get("/health", (c) => {
+  return c.json({ status: "ok" });
 });
 
-app.use(errorHandler);
+app.onError(errorHandler);
 
 /**
  * アプリケーションサーバーを起動します。
@@ -50,7 +42,9 @@ if (env.langChainTracingV2 === "true") {
 
 // Qdrantインデックスの初期化（サーバー起動前に実行）
 ensureQdrantIndexed(embeddingsModel).then(() => {
-  app.listen(env.port, () => {
-    console.log(`Server listening on http://localhost:${env.port}`);
+  console.log(`Server listening on http://localhost:${env.port}`);
+  serve({
+    fetch: app.fetch,
+    port: Number(env.port),
   });
 });

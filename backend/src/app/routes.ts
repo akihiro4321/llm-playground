@@ -1,30 +1,31 @@
-import { Router } from "express";
+import { Hono } from "hono";
 
 import { buildChatRouter } from "@/modules/chat/api/router";
 import { buildHistoryRouter } from "@/modules/history/api/router";
 import { buildLearningRouter } from "@/modules/learning/api/router";
 import { buildKnowledgeRouter } from "@/modules/rag/api/router";
+import { HonoEnv } from "@/shared/types/hono";
 
 /**
  * APIルーターを構築して返します。
  * /api 以下のルーティングを集約します。
  *
- * @returns Expressルーター
+ * @returns Honoアプリケーション
  */
-export const buildApiRouter = (): Router => {
-  const router = Router();
+export const buildApiRouter = () => {
+  const app = new Hono<HonoEnv>();
 
   // /api/chat
-  router.use("/chat", buildChatRouter());
+  app.route("/chat", buildChatRouter());
 
   // /api/knowledge
-  router.use("/knowledge", buildKnowledgeRouter());
+  app.route("/knowledge", buildKnowledgeRouter());
 
   // /api/history
-  router.use("/history", buildHistoryRouter());
+  app.route("/history", buildHistoryRouter());
 
   // /api/learning
-  router.use("/learning", buildLearningRouter());
+  app.route("/learning", buildLearningRouter());
 
-  return router;
+  return app;
 };
