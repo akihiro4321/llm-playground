@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Enhance the Multi-Agent system with improved tool definitions and basic unit tests for agent orchestration.
-*Link: [./conductor/tracks/multi_agent_enhancement_20260101/](./conductor/tracks/multi_agent_enhancement_20260101/)*
+## [ ] Track: Phase 1: 双方向データ基盤の構築 (Building the Bidirectional Data Infrastructure)
+*Link: [./conductor/tracks/data_infrastructure_phase1_20260101/](./conductor/tracks/data_infrastructure_phase1_20260101/)*
