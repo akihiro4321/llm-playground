@@ -6,6 +6,7 @@ import { LibSQLStore } from '@mastra/libsql';
 import { PinoLogger } from '@mastra/loggers';
 import { Observability } from '@mastra/observability';
 
+import { jobAnalyzerAgent } from './agents/job-analyzer.agent';
 import { weatherAgent } from './agents/weather-agent';
 import {
   completenessScorer,
@@ -16,7 +17,7 @@ import { weatherWorkflow } from './workflows/weather-workflow';
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
-  agents: { weatherAgent },
+  agents: { weatherAgent, jobAnalyzerAgent },
   scorers: {
     toolCallAppropriatenessScorer,
     completenessScorer,
