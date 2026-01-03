@@ -20,3 +20,7 @@
 ## Naming Conventions
 - **Functional & Descriptive:** Names should immediately communicate purpose (e.g., `VectorSearchService`, `SupervisorNode`).
 - **Domain-Driven:** We use established AI, RAG, and Graph terminology (e.g., `Embeddings`, `Retriever`, `State`) to maintain consistency with the broader ecosystem.
+
+## Language
+- **Documentation:** All internal documentation, including plans, specs, and architectural decisions, MUST be written in Japanese.
+- **Output:** All conversational output and status updates provided by the AI agent MUST be in Japanese.
