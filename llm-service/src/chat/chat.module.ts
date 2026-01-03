@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ChatController } from './chat.controller';
+
 import { MastraModule } from '../mastra/mastra.module';
+import { ChatController } from './chat.controller';
 
 @Module({
   imports: [MastraModule],

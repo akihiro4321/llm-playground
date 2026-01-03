@@ -1,5 +1,6 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Mastra } from '@mastra/core/mastra';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+
 import { mastra } from './index';
 
 @Injectable()

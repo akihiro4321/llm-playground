@@ -60,6 +60,64 @@
       }
     },
     {
+      "label": "llm-service: dev",
+      "type": "npm",
+      "script": "start:dev",
+      "path": "llm-service",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "Nest application successfully started"
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "llm-service: mastra",
+      "type": "npm",
+      "script": "mastra",
+      "path": "llm-service",
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "custom",
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "Mastra server started"
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
       "label": "qdrant: up",
       "type": "shell",
       "command": "docker compose up -d",
@@ -67,7 +125,12 @@
     },
     {
       "label": "dev: all",
-      "dependsOn": ["qdrant: up", "backend: dev", "frontend: dev"],
+      "dependsOn": [
+        "qdrant: up",
+        "backend: dev",
+        "frontend: dev",
+        "llm-service: dev"
+      ],
       "runOptions": {
         "runOn": "default"
       },

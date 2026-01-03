@@ -1,11 +1,13 @@
-import { z } from 'zod';
-import { createToolCallAccuracyScorerCode } from '@mastra/evals/scorers/prebuilt';
-import { createCompletenessScorer } from '@mastra/evals/scorers/prebuilt';
+import { createScorer } from '@mastra/core/evals';
+import {
+  createCompletenessScorer,
+  createToolCallAccuracyScorerCode,
+} from '@mastra/evals/scorers/prebuilt';
 import {
   getAssistantMessageFromRunOutput,
   getUserMessageFromRunInput,
 } from '@mastra/evals/scorers/utils';
-import { createScorer } from '@mastra/core/evals';
+import { z } from 'zod';
 
 export const toolCallAppropriatenessScorer = createToolCallAccuracyScorerCode({
   expectedTool: 'weatherTool',
