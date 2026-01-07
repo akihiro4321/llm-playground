@@ -7,17 +7,25 @@ import { PinoLogger } from '@mastra/loggers';
 import { Observability } from '@mastra/observability';
 
 import { jobAnalyzerAgent } from './agents/job-analyzer.agent';
+import { reporterAgent } from './agents/reporter.agent';
 import { weatherAgent } from './agents/weather-agent';
+import { webSearchAgent } from './agents/web-search.agent';
 import {
   completenessScorer,
   toolCallAppropriatenessScorer,
   translationScorer,
 } from './scorers/weather-scorer';
+import { techHunterWorkflow } from './workflows/tech-hunter.workflow';
 import { weatherWorkflow } from './workflows/weather-workflow';
 
 export const mastra = new Mastra({
-  workflows: { weatherWorkflow },
-  agents: { weatherAgent, jobAnalyzerAgent },
+  workflows: { weatherWorkflow, techHunterWorkflow },
+  agents: {
+    weatherAgent,
+    jobAnalyzerAgent,
+    'web-search-agent': webSearchAgent,
+    'reporter-agent': reporterAgent,
+  },
   scorers: {
     toolCallAppropriatenessScorer,
     completenessScorer,
